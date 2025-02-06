@@ -5,8 +5,8 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.05
- * February 5, 2025
+ * version 1.08
+ * February 6, 2025
 */
 
 /*
@@ -37,12 +37,11 @@
 //
 var svg;
 var jsonData;
-var lithologyData;
 
 //var svg_width   = '60rem';
 //var svg_height  = '50rem';
 
-var svg_width   = '800';
+var svg_width   = '900';
 var svg_height  = '400';
 var viewBox     = `0 0 ${svg_width} ${svg_height}`;
 
@@ -53,8 +52,7 @@ var y_axis      = y_box_max - y_box_min;
 
 var x_min, x_max, x_interval, x_range;
 var x_box_min   = 100;
-var x_box_width = svg_width - 200;
-var x_box_max   = x_box_min + x_box_width;
+var x_box_max   = svg_width - 200;
 var x_axis      = x_box_max - x_box_min;
 
 var x_legend    = x_box_max + 100
@@ -276,6 +274,18 @@ function addWaterlevels(
     myLogger.info(data);
     myLogger.info(`X-axis information max ${x_max} min ${x_min}`);
     
+    // Legend
+    //
+    //
+    let statusCodes = [...new Set(data.map(item => item.lev_status_cd))];
+    myLogger.info('statusCodes')
+    myLogger.info(statusCodes)
+    
+    hydrographLegend(svgContainer,
+                     statusCodes,
+                     'Explanation'
+                    )
+    
     // Add symbols
     //
     let hydrograph = svgContainer.append("g")
@@ -313,17 +323,26 @@ function addWaterlevels(
 
     // Create the categorical scales
     //
-    const color = d3.scaleOrdinal(data.map(d => d.lev_status), d3.schemeCategory10);
-    const shape = d3.scaleOrdinal(data.map(d => d.lev_status), d3.symbols.map(s => d3.symbol().type(s)()));
+    //const color = d3.scaleOrdinal(data.map(d => d.lev_status), d3.schemeCategory10);
+    //const color = d3.scaleOrdinal().domain(statusCodes).range(d3.schemeCategory10);
+    const colorScale = d3.scaleOrdinal()
+          .domain(data.map(d => d.lev_status_cd))
+          .range(d3.schemeCategory10);
+    const shapeScale = d3.scaleOrdinal()
+          .domain(data.map(d => d.lev_status_cd))
+          .range(d3.symbols.map(s => d3.symbol().type(s)()));
 
-    hydrograph.selectAll("myCircles")
+    //const shape = d3.scaleOrdinal(data.map(d => d.lev_status), d3.symbols.map(s => d3.symbol().type(s)()));
+
+    hydrograph.selectAll("path")
         .data(data)
         .enter()
-        .append("circle")
-        .attr("fill", d => color(d.lev_status))
-        .attr("d", d => shape(d.lev_status))
-        .attr("cx", function(d) { return xScale(d.date) })
-        .attr("cy", function(d) { return yScale(d.lev_va) })
+        .append("path")
+        .attr("class", 'points')
+        .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
+        .attr("fill", d => colorScale(d.lev_status))
+        .attr("d", d => shapeScale(d.lev_status))
+        .attr("transform", d => `translate(${xScale(d.date)},${yScale(d.lev_va)})`)
         .attr("r", 3)
         .on("mousemove", function(event, d) {
             tooltip
@@ -333,67 +352,63 @@ function addWaterlevels(
                 .html(d.tooltip);
         })
         .on("mouseout", function(d){ tooltip.style("display", "none");});
-  }
 
-function buildDefs(svgContainer, lithologyDefs) {
-    myLogger.info("buildDefs");
-    myLogger.info(lithologyDefs);
+}
 
-    // Check for existing definitions section
-    //
-    let defs = d3.select("defs");
-    
-    // Set definitions in svg container if needed
-    //
-    if(defs.size() < 1) {
-        myLogger.info(`Creating lithology definition section defs ${defs.size()}`);
-        defs = svgContainer.append("defs")
-    }
-    else {
-        myLogger.info(`Appending to lithology definition section defs ${defs.size()}`);
-    }
+function hydrographLegend(svgContainer,
+                          myLegend,
+                          myTitle) {
 
-    // Build definitions section
-    //
-    for(let i = 0; i < lithologyDefs.length; i++) {
-
-        let id          = lithologyDefs[i].id;
-        let description = lithologyDefs[i].description;
-        let symbol      = lithologyDefs[i].symbol;
-
-        // Build legend
-        //
-        let pattern = defs.append("pattern")
-            .attr('id', id)
-            .attr('patternUnits', 'userSpaceOnUse')
-            .attr('width', 100)
-            .attr('height', 100)
-
-        let myimage = pattern.append('image')
-            .attr('xlink:href', ["lithology_patterns", symbol].join("/"))
-            .attr('width', 100)
-            .attr('height', 100)
-            .attr('x', 0)
-            .attr('y', 0)
-    }
-
-    return;
-  }
-
-function lithologyLegend(svgContainer, myLegend, myTitle) {
-    myLogger.info("lithologyLegend");
+    myLogger.info("hydrographLegend");
     myLogger.info(myLegend);
+    
+    const colorScale = d3.scaleOrdinal()
+          .domain(myLegend)
+          .range(d3.schemeCategory10);
+    const shapeScale = d3.scaleOrdinal()
+          .domain(myLegend)
+          .range(d3.symbols.map(s => d3.symbol().type(s)()));
+
+    // Highlight the specific status code that is hovered
+    //
+    const highlight = function(id) {
+
+        d3.selectAll(".points")
+            .transition()
+            .duration(200)
+            .attr("opacity", 0.4)
+            .attr("fill", "lightgrey")
+
+        d3.selectAll("#" + id)
+            .transition()
+            .duration(100)
+            .attr("opacity", 1.0)
+            .attr("fill", d => colorScale(d.lev_status))
+            .attr("d", d => shapeScale(d.lev_status))
+    }
+
+    // Unhighlight all after hover
+    //
+    const unhighlight = function() {
+
+        d3.selectAll(".points")
+            .transition()
+            .duration(100)
+            .attr("opacity", 1.0)
+            .attr("fill", d => colorScale(d.lev_status))
+            .attr("d", d => shapeScale(d.lev_status))
+    }
 
     // Set legend
     //
     let descriptions = svgContainer.append("g")
-        .attr("id", "lithology_descriptions")
+        .attr("id", "hydrograph_descriptions")
         .attr("class", "legend_descriptions")
 
     // Set legend title
     //
-    descriptions.append("rect")
-        .attr('id', 'lithEntries')
+    descriptions.append("circle")
+        .attr('id', 'legendEntries')
         .attr('x', x_legend)
         .attr('y', y_top)
         .attr('width', 1)
@@ -416,40 +431,27 @@ function lithologyLegend(svgContainer, myLegend, myTitle) {
     for(let i = 0; i < myLegend.length; i++) {
 
         y_top += legend_box * 1.5
-
-        let Record      = myLegend[i];
         
-        let id          = Record.id
-        let description = Record.description
-        let symbol      = Record.symbol;
+        let description = myLegend[i]
+        let id          = `myCircles${description}`
 
-        myLogger.info(  `Legend lithology ${description} pattern ${symbol}`);
+        myLogger.info(  `Legend ${description}`);
 
-        let myRect = descriptions.append("rect")
-            .attr('id', 'lithEntries')
+        let myCircle = descriptions.append("circle")
+            .attr('id', 'legendEntries')
             .attr('class', id)
-            .attr('x', x_legend)
-            .attr('y', y_top)
-            .attr('width', legend_box)
-            .attr('height', legend_box)
-            .attr('fill', `url(#${id})`)
+            .attr('cx', x_legend)
+            .attr('cy', y_top + legend_box * 0.5)
+            .attr("r", 5)
+            .attr('fill', 'red')
             .attr('stroke', 'black')
             .attr('stroke-width', 1)
             .on('mouseover', function(d, i) {
                 let id = d3.select(this).attr('class');
-                d3.selectAll("#" + id)
-                    .transition()
-                    .duration(100)
-                    .attr('stroke-width', 4)
-                    .attr('stroke', 'yellow')
+                highlight(id);
             })
             .on('mouseout', function(d, i) {
-                let id = d3.select(this).attr('class');
-                d3.selectAll("#" + id)
-                    .transition()
-                    .duration(100)
-                    .attr('stroke-width', 1)
-                    .attr('stroke', 'black')
+                unhighlight();
             })
 
         let myText = descriptions.append("text")
@@ -464,19 +466,10 @@ function lithologyLegend(svgContainer, myLegend, myTitle) {
             .attr('y', y_top + legend_box * 0.75)
             .on('mouseover', function(d, i) {
                 let id = d3.select(this).attr('class');
-                d3.selectAll("#" + id)
-                    .transition()
-                    .duration(100)
-                    .attr('stroke-width', 4)
-                    .attr('stroke', 'yellow')
+                highlight(id);
             })
             .on('mouseout', function(d, i) {
-                let id = d3.select(this).attr('class');
-                d3.selectAll("#" + id)
-                    .transition()
-                    .duration(100)
-                    .attr('stroke-width', 1)
-                    .attr('stroke', 'black')
+                unhighlight();
             })
     }
   }
