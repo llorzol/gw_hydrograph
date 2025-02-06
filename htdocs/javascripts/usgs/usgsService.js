@@ -1,10 +1,10 @@
 /**
-* Namespace: Rdb
+* Namespace: usgsService
 *
-* Rdb is a JavaScript library to parse the RDB output from NwisWeb output.
+* usgsService is a JavaScript library to parse the RDB output from NwisWeb output.
 *
-* version 1.07
-* February 5, 2025
+* version 1.09
+* February 6, 2025
 *
 */
 
@@ -31,7 +31,6 @@
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
 */
-var indexField  = "site_no";
                            
 function parseSiteRDB (dataRDB) {
     myLogger.info('parseSiteRDB');
