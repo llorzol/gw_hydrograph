@@ -5,7 +5,7 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.04
+ * version 1.05
  * February 5, 2025
 */
 
@@ -275,10 +275,6 @@ function addWaterlevels(
     myLogger.info('myGwRecords');
     myLogger.info(data);
     myLogger.info(`X-axis information max ${x_max} min ${x_min}`);
-    
-    // Group
-    //
-    let hydrograph = svgContainer.append("g")
     
     // Add symbols
     //
