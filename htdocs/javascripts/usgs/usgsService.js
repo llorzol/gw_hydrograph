@@ -3,7 +3,7 @@
 *
 * usgsService is a JavaScript library to parse the RDB output from NwisWeb output.
 *
-* version 1.09
+* version 1.10
 * February 6, 2025
 *
 */
@@ -342,10 +342,14 @@ function parseGwRDB(dataRDB) {
         }
         let lev_dtm = new Intl.DateTimeFormat("en-US",dateOptions).format(myDate);
         //myLogger.info(`Date ${lev_dt} ${lev_tm} ${lev_dt_acy}   ${lev_dtm} ===> ${datePST} `);
-       
+
+        // Tooltip
+        //
         let lev_va      = myRecord.lev_va;
         let lev_status  = myRecord.lev_status_cd;
-        let toolTip     = `Waterlevel: ${lev_va} on ${datePST} Status: ${lev_status}`
+        myLogger.info(`Date ${lev_dt} ${lev_tm} ${lev_dt_acy}   ${lev_status}`);
+        if(!lev_status || lev_status.length < 1) { lev_status = 'Static'; myRecord.lev_status_cd = 'Static'; }
+        let toolTip     = `Waterlevel: ${lev_va} (${lev_status}) on ${datePST}`
 
         myRecord.id      = i;
         myRecord.date    = myDate;
