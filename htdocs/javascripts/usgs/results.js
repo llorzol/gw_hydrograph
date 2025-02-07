@@ -4,8 +4,8 @@
  * Main is a JavaScript library to provide a set of functions to manage
  *  the web requests.
  *
- * version 1.05
- * February 2, 2025
+ * version 1.06
+ * February 6, 2025
 */
 
 /*
@@ -191,6 +191,10 @@ function submitRequest() {
         jQuery("div#nwisResults").hide();
         $("div#nwisResults").html('');
     }
+    if(jQuery("div#gwHydrograph").length) {
+        jQuery("div#gwHydrograph").hide();
+        $("div#gwHydrograph").html('');
+    }
 
     // Pull results from form
     //
@@ -241,7 +245,7 @@ function clearForm() {
     jQuery("div#nwisResults").hide();
     $("div#nwisResults").html('');
     jQuery("div#gwHydrograph").hide();
-    $("div#nwisgwHydrograph").html('');
+    $("div#gwHydrograph").html('');
     jQuery("button#printSVG").hide();
 
     let url = new URL(window.location.href);
@@ -556,6 +560,8 @@ function buildHydrographPanel (mySiteRecords, myGwRecords) {
     myLogger.info(mySiteRecords);
     myLogger.info('myGwRecords');
     myLogger.info(myGwRecords);
+
+    jQuery("div#gwHydrograph").show();
 
     plotHydrograph(mySiteRecords, myGwRecords)
 }
