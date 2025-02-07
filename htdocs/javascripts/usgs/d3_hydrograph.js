@@ -5,7 +5,7 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.08
+ * version 1.09
  * February 6, 2025
 */
 
@@ -302,7 +302,6 @@ function addWaterlevels(
     //
     let height = Math.abs(y_box_max - y_box_min);
     let yScale = d3.scaleLinear().domain([y_min, y_max]).rangeRound([0, height]);
-    myLogger.info('Done scales');
 
     // Create the line generator
     //
@@ -319,31 +318,30 @@ function addWaterlevels(
         .attr("stroke", "black")
         .attr("stroke-width", 1)
         .attr("d", line);
-    myLogger.info('Done path');
 
     // Create the categorical scales
     //
     //const color = d3.scaleOrdinal(data.map(d => d.lev_status), d3.schemeCategory10);
     //const color = d3.scaleOrdinal().domain(statusCodes).range(d3.schemeCategory10);
     const colorScale = d3.scaleOrdinal()
-          .domain(data.map(d => d.lev_status_cd))
+          .domain(statusCodes)
           .range(d3.schemeCategory10);
-    const shapeScale = d3.scaleOrdinal()
-          .domain(data.map(d => d.lev_status_cd))
-          .range(d3.symbols.map(s => d3.symbol().type(s)()));
+    const symbolScale = d3.scaleOrdinal()
+          .domain(statusCodes)
+          .range([d3.symbolCircle, d3.symbolTriangle])
+          //.range(d3.symbols.map(s => d3.symbol().type(s)()));
 
     //const shape = d3.scaleOrdinal(data.map(d => d.lev_status), d3.symbols.map(s => d3.symbol().type(s)()));
 
-    hydrograph.selectAll("path")
+    hydrograph.selectAll(".points")
         .data(data)
         .enter()
         .append("path")
         .attr("class", 'points')
         .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
-        .attr("fill", d => colorScale(d.lev_status))
-        .attr("d", d => shapeScale(d.lev_status))
-        .attr("transform", d => `translate(${xScale(d.date)},${yScale(d.lev_va)})`)
-        .attr("r", 3)
+        .attr("d", d3.symbol().size(50).type(d => symbolScale(d.lev_status_cd)))
+        .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
+        .style("fill", d => colorScale(d.lev_status_cd))
         .on("mousemove", function(event, d) {
             tooltip
                 .style("left", event.pageX + "px")
@@ -365,9 +363,10 @@ function hydrographLegend(svgContainer,
     const colorScale = d3.scaleOrdinal()
           .domain(myLegend)
           .range(d3.schemeCategory10);
-    const shapeScale = d3.scaleOrdinal()
+    const symbolScale = d3.scaleOrdinal()
           .domain(myLegend)
-          .range(d3.symbols.map(s => d3.symbol().type(s)()));
+          .range([d3.symbolCircle, d3.symbolTriangle])
+          //.range(d3.symbols.map(s => d3.symbol().type(s)()));
 
     // Highlight the specific status code that is hovered
     //
@@ -376,15 +375,12 @@ function hydrographLegend(svgContainer,
         d3.selectAll(".points")
             .transition()
             .duration(200)
-            .attr("opacity", 0.4)
-            .attr("fill", "lightgrey")
+            .attr("opacity", 0.1)
 
         d3.selectAll("#" + id)
             .transition()
             .duration(100)
             .attr("opacity", 1.0)
-            .attr("fill", d => colorScale(d.lev_status))
-            .attr("d", d => shapeScale(d.lev_status))
     }
 
     // Unhighlight all after hover
@@ -395,8 +391,6 @@ function hydrographLegend(svgContainer,
             .transition()
             .duration(100)
             .attr("opacity", 1.0)
-            .attr("fill", d => colorScale(d.lev_status))
-            .attr("d", d => shapeScale(d.lev_status))
     }
 
     // Set legend
@@ -422,11 +416,11 @@ function hydrographLegend(svgContainer,
         .style("text-anchor", "start")
         .style("alignment-baseline", "center")
         .style("font-family", "sans-serif")
-        .style("font-weight", "500")
+        .style("font-weight", "700")
         .style("fill", 'black')
         .text(myTitle);
 
-    // Loop through lithology legend
+    // Loop through legend
     //
     for(let i = 0; i < myLegend.length; i++) {
 
@@ -437,15 +431,12 @@ function hydrographLegend(svgContainer,
 
         myLogger.info(  `Legend ${description}`);
 
-        let myCircle = descriptions.append("circle")
+        let myCircle = descriptions.append("path")
             .attr('id', 'legendEntries')
             .attr('class', id)
-            .attr('cx', x_legend)
-            .attr('cy', y_top + legend_box * 0.5)
-            .attr("r", 5)
-            .attr('fill', 'red')
-            .attr('stroke', 'black')
-            .attr('stroke-width', 1)
+            .attr("transform", d => `translate(${x_legend}, ${y_top + legend_box * 0.5})`)
+            .attr('fill', colorScale(description))
+            .attr("d", d3.symbol().size(100).type(d => symbolScale(description)))
             .on('mouseover', function(d, i) {
                 let id = d3.select(this).attr('class');
                 highlight(id);
