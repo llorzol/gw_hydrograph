@@ -5,7 +5,7 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.09
+ * version 1.10
  * February 6, 2025
 */
 
@@ -95,6 +95,8 @@ function plotHydrograph(
 
     // SVG canvas
     //
+    jQuery("#gwHydrograph").append('<svg id="svgCanvas"></svg>')
+    
     var svg = d3.select("#svgCanvas")
         .attr("title", `Hydrograph for ${siteTitle.join(' -- ')}`)
         .attr("version", 1.1)
