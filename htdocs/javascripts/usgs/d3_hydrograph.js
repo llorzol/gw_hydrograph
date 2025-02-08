@@ -5,8 +5,8 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.11
- * February 7, 2025
+ * version 1.12
+ * February 8, 2025
 */
 
 /*
@@ -59,7 +59,35 @@ var x_legend    = x_box_max + 100
 var y_legend    = y_box_min
 var legend_box  = 20
 var y_top       = y_box_min
-
+    
+// Water-level status codes [current set]
+//
+var statusCodes = {
+    '1': 'Static',
+    '2': 'True value is below reported value due to local conditions',
+    '3': 'True value is above reported value due to local conditions',
+    '4': 'Groundwater level affected by tide',
+    '5': 'Groundwater level affected by surface water',
+    '6': 'Measurement unable to be obtained due to local conditions',
+    '7': 'Groundwater level affected by brackish or saline water',
+    '8': 'Foreign substance was present on the surface of the water',
+    '9': 'Value was revised after publication as an approved value',
+    'C': 'Frozen',
+    'D': 'Dry',
+    'F': 'Flowing',
+    'O': 'Obstructed',
+    'P': 'Pumping'
+}
+let statusCodeL = Object.values(statusCodes);
+    
+// Set color and symbol for water-level status codes
+//
+const colorScale = d3.scaleOrdinal()
+      .domain(statusCodeL)
+      .range(d3.schemeCategory10);
+const symbolScale = d3.scaleOrdinal()
+      .domain(statusCodeL)
+      .range(d3.symbols.map(s => d3.symbol().type(s)()));
 
 // Plot hydrograph column
 //
@@ -279,12 +307,10 @@ function addWaterlevels(
     // Legend
     //
     //
-    let statusCodes = [...new Set(data.map(item => item.lev_status_cd))];
-    myLogger.info('statusCodes')
-    myLogger.info(statusCodes)
+    let myStatusCodes = [...new Set(data.map(item => item.lev_status_cd))];
     
     hydrographLegend(svgContainer,
-                     statusCodes,
+                     myStatusCodes,
                      'Explanation'
                     )
     
@@ -315,33 +341,20 @@ function addWaterlevels(
     //
     hydrograph.append("path")
         .datum(data)
-        //.attr("transform", `translate(${x_box_min}, ${y_box_min})`)
         .attr("fill", "none")
         .attr("stroke", "black")
         .attr("stroke-width", 1)
         .attr("d", line);
 
-    // Create the categorical scales
+    // Draw the points
     //
-    //const color = d3.scaleOrdinal(data.map(d => d.lev_status), d3.schemeCategory10);
-    //const color = d3.scaleOrdinal().domain(statusCodes).range(d3.schemeCategory10);
-    const colorScale = d3.scaleOrdinal()
-          .domain(statusCodes)
-          .range(d3.schemeCategory10);
-    const symbolScale = d3.scaleOrdinal()
-          .domain(statusCodes)
-          .range([d3.symbolCircle, d3.symbolTriangle])
-          //.range(d3.symbols.map(s => d3.symbol().type(s)()));
-
-    //const shape = d3.scaleOrdinal(data.map(d => d.lev_status), d3.symbols.map(s => d3.symbol().type(s)()));
-
     hydrograph.selectAll(".points")
         .data(data)
         .enter()
         .append("path")
         .attr("class", 'points')
         .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
-        .attr("d", d3.symbol().size(50).type(d => symbolScale(d.lev_status_cd)))
+        .attr("d", d => symbolScale(d.lev_status_cd))
         .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
         .style("fill", d => colorScale(d.lev_status_cd))
         .on("mousemove", function(event, d) {
@@ -361,14 +374,6 @@ function hydrographLegend(svgContainer,
 
     myLogger.info("hydrographLegend");
     myLogger.info(myLegend);
-    
-    const colorScale = d3.scaleOrdinal()
-          .domain(myLegend)
-          .range(d3.schemeCategory10);
-    const symbolScale = d3.scaleOrdinal()
-          .domain(myLegend)
-          .range([d3.symbolCircle, d3.symbolTriangle])
-          //.range(d3.symbols.map(s => d3.symbol().type(s)()));
 
     // Highlight the specific status code that is hovered
     //
@@ -438,7 +443,8 @@ function hydrographLegend(svgContainer,
             .attr('class', id)
             .attr("transform", d => `translate(${x_legend}, ${y_top + legend_box * 0.5})`)
             .attr('fill', colorScale(description))
-            .attr("d", d3.symbol().size(100).type(d => symbolScale(description)))
+            //.attr("d", d3.symbol().size(100).type(d => symbolScale(description)))
+            .attr("d", symbolScale(description))
             .on('mouseover', function(d, i) {
                 let id = d3.select(this).attr('class');
                 highlight(id);
