@@ -4,8 +4,8 @@
  * Main is a JavaScript library to provide a set of functions to manage
  *  the web requests.
  *
- * version 1.07
- * February 7, 2025
+ * version 1.08
+ * February 8, 2025
 */
 
 /*
