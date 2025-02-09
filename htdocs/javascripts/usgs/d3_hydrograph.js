@@ -5,7 +5,7 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.12
+ * version 1.13
  * February 8, 2025
 */
 
@@ -64,19 +64,19 @@ var y_top       = y_box_min
 //
 var statusCodes = {
     '1': 'Static',
-    '2': 'True value is below reported value due to local conditions',
-    '3': 'True value is above reported value due to local conditions',
     '4': 'Groundwater level affected by tide',
     '5': 'Groundwater level affected by surface water',
-    '6': 'Measurement unable to be obtained due to local conditions',
     '7': 'Groundwater level affected by brackish or saline water',
     '8': 'Foreign substance was present on the surface of the water',
-    '9': 'Value was revised after publication as an approved value',
     'C': 'Frozen',
-    'D': 'Dry',
     'F': 'Flowing',
+    'D': 'Dry',
     'O': 'Obstructed',
-    'P': 'Pumping'
+    'P': 'Pumping',
+    '2': 'True value is below reported value due to local conditions',
+    '3': 'True value is above reported value due to local conditions',
+    '6': 'Measurement unable to be obtained due to local conditions',
+    '9': 'Value was revised after publication as an approved value'
 }
 let statusCodeL = Object.values(statusCodes);
     
@@ -121,6 +121,11 @@ function plotHydrograph(
     if(siteData.coop_site_no) { siteTitle.push(`CDWR ${siteData.cdwr_id}`); }
     if(siteData.station_nm) { siteTitle.push(`${siteData.station_nm}`); }
 
+    let wellDepth = null;
+    if(siteData.well_depth_va) { wellDepth = siteData.well_depth_va; }
+    if(siteData.hole_depth_va) { wellDepth = siteData.hole_depth_va; }
+    if(wellDepth) { siteTitle.push(`Well depth ${wellDepth}`); }
+
     // SVG canvas
     //
     jQuery("#gwHydrograph").append('<svg id="svgCanvas"></svg>')
@@ -157,6 +162,27 @@ function plotHydrograph(
         .style("font-weight", "700")
         .style("fill", 'black')
         .text(`Site ${siteTitle.join(' -- ')}`)
+
+    // Identify Dry conditions
+    //
+    let dryRecords = myGwRecords.filter(line => line.lev_status_cd == 'Dry');
+    myLogger.info('dryRecords');
+    myLogger.info(dryRecords);
+    let firstTime = null;
+
+    for(let i = 0; i < myGwRecords.length; i++) {
+        let myRecord = myGwRecords[i];
+
+        if(myRecord.lev_status_cd == 'Dry') { myRecord.lev_va = wellDepth; }
+
+        if(firstTime) {
+            let deltaDays = Math.floor((myRecord.date - firstTime) / 86400000);
+            if(deltaDays > 365) {
+                myLogger.info(`Over 2 yrs at ${myRecord.lev_dt}`);                
+            }                
+        }
+        firstTime = myRecord.date;        
+    }
 
     // Max and min waterlevel values
     //
@@ -201,7 +227,7 @@ function plotHydrograph(
       'right',
       'Elevation, in feet ' + verticalDatum
     );
-
+            
     // Bottom x axis (time)
     //
     let firstGw   = myGwRecords[0]
@@ -331,16 +357,18 @@ function addWaterlevels(
     let height = Math.abs(y_box_max - y_box_min);
     let yScale = d3.scaleLinear().domain([y_min, y_max]).rangeRound([0, height]);
 
-    // Create the line generator
+    // Gaps for waterlevel is null [Dry, Obstructed]
     //
     let line = d3.line()
-          .x(d => xScale(d.date))
-          .y(d => yScale(d.lev_va));
+        .defined((d) => d.lev_va !== null) // Skip null data points
+        .x((d) => xScale(d.date))
+        .y((d) => yScale(d.lev_va))
 
     // Draw the line
     //
     hydrograph.append("path")
         .datum(data)
+        //.attr("transform", `translate(${x_box_min}, ${y_box_min})`)
         .attr("fill", "none")
         .attr("stroke", "black")
         .attr("stroke-width", 1)
