@@ -3,7 +3,7 @@
 *
 * usgsService is a JavaScript library to parse the RDB output from NwisWeb output.
 *
-* version 1.11
+* version 1.12
 * February 8, 2025
 *
 */
@@ -310,6 +310,8 @@ function parseGwRDB(dataRDB) {
         //
         let [myYear, myMonth, myDay] = lev_dt.split(/-/);
         let [myHour, myMinute] = lev_tm.split(/:/);
+        if(!myMonth) { myMonth = 8; }
+        if(!myDay) { myDay = 15; }
         if(!myHour) { myHour = 12; }
         if(!myMinute) { myMinute = 0; }
         let myDate = new Date(Date.UTC(myYear, myMonth - 1, myDay, myHour, myMinute));
