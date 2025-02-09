@@ -3,8 +3,8 @@
 *
 * usgsService is a JavaScript library to parse the RDB output from NwisWeb output.
 *
-* version 1.10
-* February 6, 2025
+* version 1.11
+* February 8, 2025
 *
 */
 
@@ -242,14 +242,6 @@ function parseGwRDB(dataRDB) {
       
     // Data lines
     //
-    myTemp = d3.tsvParse(tempLines.join('\n'))
-    myLogger.info('Temp');
-    myLogger.info(myTemp);
-    Temps = myTemp.columns;
-    myLogger.info(Temps);
-      
-    // Data lines
-    //
     myLogger.info(dataLines);
     myData = d3.tsvParse(dataLines.join('\n'))
     myLogger.info('GW');
@@ -347,16 +339,20 @@ function parseGwRDB(dataRDB) {
         //
         let lev_va      = myRecord.lev_va;
         let lev_status  = myRecord.lev_status_cd;
-        myLogger.info(`Date ${lev_dt} ${lev_tm} ${lev_dt_acy}   ${lev_status}`);
         if(!lev_status || lev_status.length < 1) { lev_status = 'Static'; myRecord.lev_status_cd = 'Static'; }
         let toolTip     = `Waterlevel: ${lev_va} (${lev_status}) on ${datePST}`
+        myLogger.info(`Date ${lev_dt} ${lev_tm} ${lev_dt_acy}   ${lev_va}   ${lev_status}`);
 
         myRecord.id      = i;
         myRecord.date    = myDate;
         myRecord.lev_dtm = lev_dtm;
         myRecord.tooltip = toolTip;
     }
+
+    let Obstructed = myData.filter(line => line.lev_status_cd == 'Obstructed');
+    myLogger.info('myData');
     myLogger.info(myData);
+    myLogger.info(Obstructed);
     
     return [ myData, myDataDict ];
   }
