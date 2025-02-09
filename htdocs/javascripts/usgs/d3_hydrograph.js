@@ -5,8 +5,8 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.13
- * February 8, 2025
+ * version 1.14
+ * February 9, 2025
 */
 
 /*
@@ -174,14 +174,6 @@ function plotHydrograph(
         let myRecord = myGwRecords[i];
 
         if(myRecord.lev_status_cd == 'Dry') { myRecord.lev_va = wellDepth; }
-
-        if(firstTime) {
-            let deltaDays = Math.floor((myRecord.date - firstTime) / 86400000);
-            if(deltaDays > 365) {
-                myLogger.info(`Over 2 yrs at ${myRecord.lev_dt}`);                
-            }                
-        }
-        firstTime = myRecord.date;        
     }
 
     // Max and min waterlevel values
@@ -364,11 +356,12 @@ function addWaterlevels(
         .x((d) => xScale(d.date))
         .y((d) => yScale(d.lev_va))
 
+    let dataPoints = data.filter(d => d.lev_va !== null)
+
     // Draw the line
     //
     hydrograph.append("path")
         .datum(data)
-        //.attr("transform", `translate(${x_box_min}, ${y_box_min})`)
         .attr("fill", "none")
         .attr("stroke", "black")
         .attr("stroke-width", 1)
@@ -377,7 +370,7 @@ function addWaterlevels(
     // Draw the points
     //
     hydrograph.selectAll(".points")
-        .data(data)
+        .data(dataPoints)
         .enter()
         .append("path")
         .attr("class", 'points')
