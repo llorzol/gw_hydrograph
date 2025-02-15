@@ -5,8 +5,8 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.14
- * February 9, 2025
+ * version 1.18
+ * February 15, 2025
 */
 
 /*
@@ -42,12 +42,12 @@ var jsonData;
 //var svg_height  = '50rem';
 
 var svg_width   = '900';
-var svg_height  = '400';
+var svg_height  = '600';
 var viewBox     = `0 0 ${svg_width} ${svg_height}`;
 
 var y_min, y_max, y_interval, y_range;
 var y_box_min   = 50;
-var y_box_max   = svg_height - 100;
+var y_box_max   = svg_height - 300;
 var y_axis      = y_box_max - y_box_min;
 
 var x_min, x_max, x_interval, x_range;
@@ -59,6 +59,9 @@ var x_legend    = x_box_max + 100
 var y_legend    = y_box_min
 var legend_box  = 20
 var y_top       = y_box_min
+
+var y_zoom_min   = y_box_max + 50;
+var y_zoom_max   = y_zoom_min + 75;
     
 // Water-level status codes [current set]
 //
@@ -121,11 +124,6 @@ function plotHydrograph(
     if(siteData.coop_site_no) { siteTitle.push(`CDWR ${siteData.cdwr_id}`); }
     if(siteData.station_nm) { siteTitle.push(`${siteData.station_nm}`); }
 
-    let wellDepth = null;
-    if(siteData.well_depth_va) { wellDepth = siteData.well_depth_va; }
-    if(siteData.hole_depth_va) { wellDepth = siteData.hole_depth_va; }
-    if(wellDepth) { siteTitle.push(`Well depth ${wellDepth}`); }
-
     // SVG canvas
     //
     jQuery("#gwHydrograph").append('<svg id="svgCanvas"></svg>')
@@ -144,6 +142,7 @@ function plotHydrograph(
     //
     axisBox(
         svg,
+        'zoomPlot',
         x_box_min,
         x_box_max,
         y_box_min,
@@ -151,10 +150,28 @@ function plotHydrograph(
         "none"
     );
 
+    // Draw brush graph
+    //
+    axisBox(
+        svg,
+        'overviewPlot',
+        x_box_min,
+        x_box_max,
+        y_zoom_min,
+        y_zoom_max,
+        "none"
+    );
+
+    let wellDepth = null;
+    if(siteData.well_depth_va) { wellDepth = siteData.well_depth_va; }
+    if(siteData.hole_depth_va) { wellDepth = siteData.hole_depth_va; }
+    if(wellDepth) { siteTitle.push(`Well depth ${wellDepth}`); }
+
     // Add site information
     //
     var myRect = svg.append("g")
         .append("text")
+        .attr('id', 'SiteCaption')
         .attr('x', 0.0)
         .attr('y', y_box_min * 0.5)
         .style("text-anchor", "start")
@@ -189,6 +206,7 @@ function plotHydrograph(
     //
     yAxis(
         svg,
+        'zoomPlot',
         x_box_min,
         x_box_max,
         y_box_min,
@@ -209,15 +227,16 @@ function plotHydrograph(
     let elevation_min = elevation_max - y_max;
 
     yAxis(
-      svg,
-      x_box_min,
-      x_box_max,
-      y_box_min,
-      y_box_max,
-      elevation_max,
-      elevation_min,
-      'right',
-      'Elevation, in feet ' + verticalDatum
+        svg,
+        'zoomPlot',
+        x_box_min,
+        x_box_max,
+        y_box_min,
+        y_box_max,
+        elevation_max,
+        elevation_min,
+        'right',
+        'Elevation, in feet ' + verticalDatum
     );
             
     // Bottom x axis (time)
@@ -237,10 +256,24 @@ function plotHydrograph(
     
     timeAxis(
       svg,
+      'zoomPlot',
       x_box_min,
       x_box_max,
       y_box_min,
       y_box_max,
+      firstDate,
+      lastDate,
+      'bottom',
+      null
+    );
+    
+    timeAxis(
+      svg,
+      'overviewPlot',
+      x_box_min,
+      x_box_max,
+      y_zoom_min,
+      y_zoom_max,
       firstDate,
       lastDate,
       'bottom',
@@ -332,17 +365,17 @@ function addWaterlevels(
                      'Explanation'
                     )
     
-    // Add symbols
+    // Add hydrograph
     //
-    let hydrograph = svgContainer.append("g")
+    let hydrograph = d3.select(`#zoomPlot`)
+        .append("g")
         .attr("transform", `translate(${x_box_min}, ${y_box_min})`)
+        .attr("clip-path", "url(#clip)")
     
     // Create the x scale
     //
     let width  = Math.abs(x_box_max - x_box_min);
-    let xScale = d3.scaleTime()
-	.domain([x_min, x_max]).nice()
-	.range([0, width])
+    let xScale = d3.scaleTime().domain([x_min, x_max]).nice().range([0, width])
 
     // Create the y scale
     //
@@ -356,28 +389,29 @@ function addWaterlevels(
         .x((d) => xScale(d.date))
         .y((d) => yScale(d.lev_va))
 
-    let dataPoints = data.filter(d => d.lev_va !== null)
-
     // Draw the line
     //
     hydrograph.append("path")
         .datum(data)
+        .attr("class", 'line')
         .attr("fill", "none")
         .attr("stroke", "black")
         .attr("stroke-width", 1)
         .attr("d", line);
 
-    // Draw the points
+    // Draw the points only valid waterlevel measurement
     //
-    hydrograph.selectAll(".points")
+    let dataPoints = data.filter(d => d.lev_va !== null)
+
+    hydrograph.selectAll(".pts")
         .data(dataPoints)
         .enter()
         .append("path")
-        .attr("class", 'points')
+        .attr("class", 'pts')
         .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
-        .attr("d", d => symbolScale(d.lev_status_cd))
         .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
-        .style("fill", d => colorScale(d.lev_status_cd))
+        .attr("d", d => symbolScale(d.lev_status_cd))
+        .attr("fill", d => colorScale(d.lev_status_cd))
         .on("mousemove", function(event, d) {
             tooltip
                 .style("left", event.pageX + "px")
@@ -386,7 +420,136 @@ function addWaterlevels(
                 .html(d.tooltip);
         })
         .on("mouseout", function(d){ tooltip.style("display", "none");});
+    
+    // Add overview hydrograph
+    //
+    let overgraph = d3.select("#overviewPlot")
+        .append("g")
+        .attr("transform", `translate(${x_box_min}, ${y_zoom_min})`)
+    
+    // Create the y scale
+    //
+    let overHeight    = Math.abs(y_zoom_max - y_zoom_min);
+    let overviewScale = d3.scaleLinear().domain([y_min, y_max]).rangeRound([0, overHeight]);
 
+    // Gaps for waterlevel is null [Dry, Obstructed]
+    //
+    let overline = d3.line()
+        .defined((d) => d.lev_va !== null) // Skip null data points
+        .x((d) => xScale(d.date))
+        .y((d) => overviewScale(d.lev_va))
+
+    // Draw the line
+    //
+    overgraph.append("path")
+        .datum(data)
+        .attr("class", 'line')
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("d", overline);
+
+    // Draw the points
+    //
+    overgraph.selectAll(".overPts")
+        .data(dataPoints)
+        .enter()
+        .append("path")
+        .attr("class", 'overPts')
+        .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
+        .attr("transform", d => `translate(${xScale(d.date)}, ${overviewScale(d.lev_va)})`)
+        .attr("d", d => symbolScale(d.lev_status_cd))
+        .attr("fill", d => colorScale(d.lev_status_cd))
+    
+    // Add brushing
+    //
+    overgraph.call(d3.brushX()
+                   .extent( [ [0,0], [width,overHeight] ] )
+                   .on("end", ({selection}) => {
+                       myLogger.info(`Brushed `);
+                       //myLogger.info(selection);
+                       let selectedSet = [];
+
+                       // Color selected set
+                       //
+                       if (selection) {
+                           hydrograph.selectAll(".pts")
+                               .attr("d", d => symbolScale(d.lev_status_cd))
+                               .attr("fill", d => colorScale(d.lev_status_cd))
+
+                           let [x0, x1] = selection;
+                           myLogger.info(`Selection ${x0}  ${x1}`);
+                           selectedSet = d3.selectAll(".pts")
+                               .filter(d => xScale(d.date) >= x0 && xScale(d.date) <= x1)
+                               .attr("fill", "red")
+                               .data();
+                           myLogger.info(`selectedSet`);
+                           myLogger.info(selectedSet);
+
+                           xScale.domain([ xScale.invert(x0), xScale.invert(x1) ])
+                           d3.select("#zoomPlot").selectAll(".bottomAxis").transition().duration(1000).call(d3.axisBottom(xScale).tickSizeOuter(0))
+
+                           // Draw the line
+                           //
+                           hydrograph.selectAll(".line")
+                               .transition()
+                               .duration(1000)
+                               .attr("d", line);
+
+                           hydrograph.selectAll(".pts")
+                               .transition()
+                               .duration(1000)
+                               .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
+                               .attr("d", d => symbolScale(d.lev_status_cd))
+                               .attr("fill", d => colorScale(d.lev_status_cd))
+                       }
+
+                       // Null set
+                       //
+                       else {
+
+                           xScale.domain([x_min, x_max]).nice().range([0, width])
+                           d3.select("#zoomPlot").selectAll(".bottomAxis").transition().duration(1000).call(d3.axisBottom(xScale).tickSizeOuter(0))
+                           
+                           hydrograph.selectAll(".pts")
+                               .attr("d", d => symbolScale(d.lev_status_cd))
+                               .attr("fill", d => colorScale(d.lev_status_cd))
+                       }
+                   })
+                  );
+
+    // Add a clipPath: everything out of this area won't be drawn.
+    //
+    var clip = svgContainer.append("defs").append("svg:clipPath")
+        .attr("id", "clip")
+        .append("svg:rect")
+        .attr("width", width )
+        .attr("height", height )
+        .attr("x", 0)
+        .attr("y", 0);
+    
+    // Null brushing
+    //
+    overgraph.on("dblclick", function() {
+        myLogger.info('dblclick');
+
+        xScale.domain([x_min, x_max]).nice().range([0, width])
+        d3.select("#zoomPlot").selectAll(".bottomAxis").transition().duration(1000).call(d3.axisBottom(xScale).tickSizeOuter(0))
+
+        // Draw the line
+        //
+        hydrograph.selectAll(".line")
+            .transition()
+            .duration(1000)
+            .attr("d", line);
+
+        hydrograph.selectAll(".pts")
+            .transition()
+            .duration(1000)
+            .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
+            .attr("d", d => symbolScale(d.lev_status_cd))
+            .attr("fill", d => colorScale(d.lev_status_cd))
+    });
 }
 
 function hydrographLegend(svgContainer,
@@ -493,3 +656,88 @@ function hydrographLegend(svgContainer,
             })
     }
   }
+
+function addWaterlevelsSave(
+    svgContainer,
+    y_min,
+    y_max,
+    x_min,
+    x_max,
+    x_box_min,
+    x_box_max,
+    y_box_min,
+    y_box_max,
+    data,
+    tooltip) {
+
+    myLogger.info('addWaterlevels');
+    myLogger.info('myGwRecords');
+    myLogger.info(data);
+    myLogger.info(`X-axis information max ${x_max} min ${x_min}`);
+    
+    // Legend
+    //
+    //
+    let myStatusCodes = [...new Set(data.map(item => item.lev_status_cd))];
+    
+    hydrographLegend(svgContainer,
+                     myStatusCodes,
+                     'Explanation'
+                    )
+    
+    // Add symbols
+    //
+    let hydrograph = svgContainer.append("g")
+        .attr("transform", `translate(${x_box_min}, ${y_box_min})`)
+    
+    // Create the x scale
+    //
+    let width  = Math.abs(x_box_max - x_box_min);
+    let xScale = d3.scaleTime()
+	.domain([x_min, x_max]).nice()
+	.range([0, width])
+
+    // Create the y scale
+    //
+    let height = Math.abs(y_box_max - y_box_min);
+    let yScale = d3.scaleLinear().domain([y_min, y_max]).rangeRound([0, height]);
+
+    // Gaps for waterlevel is null [Dry, Obstructed]
+    //
+    let line = d3.line()
+        .defined((d) => d.lev_va !== null) // Skip null data points
+        .x((d) => xScale(d.date))
+        .y((d) => yScale(d.lev_va))
+
+    let dataPoints = data.filter(d => d.lev_va !== null)
+
+    // Draw the line
+    //
+    hydrograph.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("d", line);
+
+    // Draw the points
+    //
+    hydrograph.selectAll(".points")
+        .data(dataPoints)
+        .enter()
+        .append("path")
+        .attr("class", 'points')
+        .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
+        .attr("d", d => symbolScale(d.lev_status_cd))
+        .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
+        .style("fill", d => colorScale(d.lev_status_cd))
+        .on("mousemove", function(event, d) {
+            tooltip
+                .style("left", event.pageX + "px")
+                .style("top", event.pageY + "px")
+                .style("display", "inline-block")
+                .html(d.tooltip);
+        })
+        .on("mouseout", function(d){ tooltip.style("display", "none");});
+
+}
