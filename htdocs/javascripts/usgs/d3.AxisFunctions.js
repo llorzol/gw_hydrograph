@@ -4,8 +4,8 @@
  * d3_AxisFunctions is a JavaScript library to provide a set of functions to build
  *  axes and labelling for well construction and lithology applications in svg format.
  *
- * version 3.11
- * February 2, 2025
+ * version 3.15
+ * February 15, 2025
 */
 
 /*
@@ -78,6 +78,7 @@ function noLog(svgContainer, message, x_box_min, x_box_max, y_box_min, y_box_max
     label          += ") rotate(-90)";
 
     var myText      = svgContainer.append("text")
+        .attr("id", "noLog")
         .attr("transform", label)
         .attr('class', 'y_axis_label')
         .style("text-anchor", "middle")
@@ -92,20 +93,22 @@ function noLog(svgContainer, message, x_box_min, x_box_max, y_box_min, y_box_max
 //
 function axisBox(
                  svgContainer, 
+                 axisID, 
                  x_box_min, 
                  x_box_max, 
                  y_box_min, 
                  y_box_max,
-                 fill
-                )
-  { 
+                 fill)  {
+
     myLogger.debug("axesBox");
     myLogger.debug(`x_box_min ${x_box_min} x_box_max ${x_box_max} y_box_min ${y_box_min} y_box_max ${y_box_max}`);
 
     // Draw the Rectangle
     //
     var rectangle = svgContainer.append("g")
+        .attr("id", axisID)
         .append("rect")
+        .attr("class", "axisBox")
         .attr("x", x_box_min)
         .attr("y", y_box_min)
         .attr("width", Math.abs(x_box_max - x_box_min))
@@ -118,20 +121,26 @@ function axisBox(
 // X axis
 //
 function xAxis(
-                  svgContainer,
-                  x_box_min, 
-                  x_box_max, 
-                  y_box_min,
-                  y_box_max,
-                  x_min,
-                  x_max,
-                  axis_side,
-                  axis_label
-                 )
-  {
+    svgContainer,
+    axisID,
+    x_box_min,
+    x_box_max,
+    y_box_min,
+    y_box_max,
+    x_min,
+    x_max,
+    axis_side,
+    axis_label
+) {
     myLogger.debug("xAxis");
     myLogger.debug(`x_box_min ${x_box_min} x_box_max ${x_box_max} y_box_min ${y_box_min} y_box_max ${y_box_max}`);
     myLogger.debug(`x_min ${x_min} x_max ${x_max} axis_side ${axis_side} axis_label ${axis_label}`);
+
+    // Axis
+    //
+    let graph = d3.select(`#${axisID}`)
+        .append("g")
+    myLogger.info(graph)
 
     // Axis scale
     //
@@ -140,78 +149,77 @@ function xAxis(
 
     // Tic values
     //
-    var tickFormat = ".0f";
+    let tickFormat  = ".0f";
+    let labelOffset = 1;
 
-    // X axis
+    // Top axis
     //
     if(axis_side.toLowerCase() == 'top') {
-      var graph = svgContainer.append("g")
-          .attr("transform", "translate(" + x_box_min + "," + y_box_min + ")");
-
-      // Top axis
-      //
-      var theAxis = graph.append("g")
-          .attr("class", "axis axis--x")
-          .call(d3.axisTop(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
+        labelOffset = -1;
+        graph.attr("transform", `translate(${x_box_min}, ${y_box_min})`)
+            .attr("class", "topAxis axis axis--x")
+            .call(d3.axisTop(thisAxis).tickSizeOuter(0).ticks(5))
     }
+
+    // Bottom axis
+    //
     else {
-      var graph = svgContainer.append("g")
-          .attr("transform", "translate(" + x_box_max + "," + y_box_max + ")");
+        graph.attr("transform", "translate(" + x_box_max + "," + y_box_max + ")")
+            .attr("class", "bottomAxis axis axis--x")
+            .call(d3.axisBottom(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
+    }
 
-      // Bottom axis
-      //
-      var theAxis = graph.append("g")
-          .attr("class", "axis axis--x")
-          .call(d3.axisBottom(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
+    // Axis label
+    //
+    if(axis_label) {
 
-      // Determine text width for label placement
-      //
-      var text_label  = String(max);
-      var text_length = text_label.length;
-      myLogger.debug(`text_label ${text_label}`);
+        // Determine axis tic dimensions
+        //
+        let axisElement = d3.select(`#${axisID}`)
+        if(axisElement) {
+            axisInfo  = getLegendPosition(axisElement)
+            xPosition = axisInfo.x
+            yPosition = axisInfo.y
+            ticWidth  = axisInfo.width
+            ticHeight = axisInfo.height
 
-      var myText      = svgContainer.append("text")
-          .attr("class", "tic_labels")
-          .text(text_label);
-      var textInfo    = textSize(myText)
-      var text_height = textInfo.height;
-
-      // Axis label
-      //
-      var labelOffset = text_height * 4
-      var label       = "translate("
-      label          += [(x_box_max + x_box_min ) * 0.5, y_box_max + labelOffset].join(", ");
-      label          += ")";
-
-      var axis_label = svgContainer.append("g")
-          .append("text")
-          .attr("transform", label)
-          .attr('class', 'x_axis_label')
-          .style("text-anchor", "middle")
-          .style("font-family", "sans-serif")
-          .style("font-weight", "700")
-          .style("fill", 'black')
-          .text(axis_label);
+            // Axis label
+            //
+            graph.append("g")
+                .attr("id", "x-axis-label")
+                .append("text")
+                .attr("transform", `translate(${width}, ${y_box_max + ticHeight * 1.5 * labelOffset})`)
+                .attr('class', 'x_axis_label')
+                .style("text-anchor", "middle")
+                .style("font-family", "sans-serif")
+                .style("font-weight", "700")
+                .style("fill", 'black')
+                .text(axis_label);
+        }
     }
 }
 
 // Y axis
 //
 function yAxis(
-                  svgContainer,
-                  x_box_min, 
-                  x_box_max, 
-                  y_box_min,
-                  y_box_max,
-                  y_min,
-                  y_max,
-                  axis_side,
-                  axis_label
-                 )
-  { 
+    svgContainer,
+    axisID,
+    x_box_min,
+    x_box_max,
+    y_box_min,
+    y_box_max,
+    y_min,
+    y_max,
+    axis_side,
+    axis_label) {
     myLogger.debug("yAxis");
     myLogger.debug(`x_box_min ${x_box_min} x_box_max ${x_box_max} y_box_min ${y_box_min} y_box_max ${y_box_max}`);
     myLogger.debug(`y_min ${y_min} y_max ${y_max} axis_side ${axis_side} axis_label ${axis_label}`);
+
+    // Axis
+    //
+    let graph = d3.select(`#${axisID}`)
+        .append("g")
 
     // Y axis
     //
@@ -220,85 +228,75 @@ function yAxis(
 
     // Tic format
     //
-    var tickFormat     = ".0f";
+    let tickFormat  = ".0f";
+    let labelOffset = 1;
+    let x_label     = x_box_min;
 
     // Y axis
     //
     if(axis_side.toLowerCase() == 'left') {
-      var graph = svgContainer.append("g")
-          .attr("transform", "translate(" + x_box_min + "," + y_box_min + ")");
-
-      // Left axis
-      //
-      var theAxis = graph.append("g")
-          .attr("class", "axis axis--y")
-          .call(d3.axisLeft(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
-    }
-    else {
-      var graph = svgContainer.append("g")
-          .attr("transform", "translate(" + x_box_max + "," + y_box_min + ")");
-
-      // Right axis
-      //
-      var theAxis = graph.append("g")
-          .attr("class", "axis axis--y")
-          .call(d3.axisRight(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
+        labelOffset = -1;
+        graph.attr("transform", `translate(${x_box_min}, ${y_box_min})`)
+            .attr("class", "leftAxis axis axis--y")
+            .call(d3.axisLeft(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
+    } else {
+        x_label = x_box_max;
+        graph.attr("transform", `translate(${x_box_max}, ${y_box_min})`)
+            .attr("class", "rightAxis axis axis--y")
+            .call(d3.axisRight(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
     }
 
-    // Determine text width for label placement
+    // Axis label
     //
-    var text_label  = String(y_max);
-    var text_length = text_label.length;
-    if(String(y_min).length > text_length) {
-      text_label  = String(y_min);
-      text_length = text_label.length;
-    }
-    myLogger.debug(`text_label ${text_label}`);
+    if(axis_label) {
 
-    var myText      = svgContainer.append("text")
-        .text(text_label);
-    var textInfo    = textSize(myText)
-    var text_width  = textInfo.width / text_label.length;
+        // Determine axis tic dimensions
+        //
+        axisInfo  = getSvg(`.${axis_side}Axis`)
+        xPosition = axisInfo.x
+        yPosition = axisInfo.y
+        ticWidth  = axisInfo.width
+        ticHeight = axisInfo.height
+        myLogger.info(`Axis label ${axis_side}Axis x ${xPosition} y ${yPosition} ticWidth ${ticWidth} ticHeight ${ticHeight}`)
 
-    // Left axis label
-    //
-    var labelOffset = text_width * text_length
-    var label       = "translate("
-    if(axis_side.toLowerCase() == 'left') {
-      label += [x_box_min - labelOffset, (y_box_max + y_box_min ) * 0.5].join(", ");
+        // Axis label
+        //
+        d3.select(`#${axisID}`)
+            .append("g")
+            .attr("id", "y-axis-label")
+            .append("text")
+            .attr("transform", `translate(${x_label + ticWidth * 2 * labelOffset}, ${y_box_min + height * 0.5}) rotate(-90)`)
+            .attr('class', 'y_axis_label')
+            .style("text-anchor", "middle")
+            .style("font-family", "sans-serif")
+            .style("font-weight", "700")
+            .style("fill", 'black')
+            .text(axis_label);
     }
-    else {
-      label += [x_box_max + labelOffset, (y_box_max + y_box_min ) * 0.5].join(", ");
-    }
-    label          += ") rotate(-90)";
-
-    var y_axis_label = svgContainer.append("g")
-        .append("text")
-        .attr("transform", label)
-        .style("text-anchor", "middle")
-        .style("font-family", "sans-serif")
-        .style("font-weight", "700")
-        .style("fill", 'black')
-        .text(axis_label);
-  }
+}
 
 // Time axis
 //
 function timeAxis(
-                  svgContainer,
-                  x_box_min, 
-                  x_box_max, 
-                  y_box_min,
-                  y_box_max,
-                  minDate,
-                  maxDate,
-                  axis_side,
-                  axis_label
-) {
+    svgContainer,
+    axisID,
+    x_box_min,
+    x_box_max,
+    y_box_min,
+    y_box_max,
+    minDate,
+    maxDate,
+    axis_side,
+    axis_label) {
 
     myLogger.info("timeAxis");
-    myLogger.debug(`x_box_min ${x_box_min} x_box_max ${x_box_max} y_box_min ${y_box_min} y_box_max ${y_box_max}`);
+    myLogger.info(`ID ${axisID} x_box_min ${x_box_min} x_box_max ${x_box_max} y_box_min ${y_box_min} y_box_max ${y_box_max}`);
     myLogger.debug(`x_min ${x_min} x_max ${x_max} axis_side ${axis_side} axis_label ${axis_label}`);
+
+    // Axis
+    //
+    let graph = d3.select(`#${axisID}`)
+    myLogger.info(graph)
 
     // Axis scale
     //
@@ -310,35 +308,24 @@ function timeAxis(
     // Top axis position
     //
     if(axis_side.toLowerCase() == 'top') {
-      var graph = svgContainer.append("g")
-          .attr("transform", `translate(${x_box_min}, ${y_box_min})`);
 
-      // Top axis
-      //
-      var theAxis = graph.append("g")
-          .attr("class", "axis axis--x")
-          .call(d3.axisTop(thisAxis).tickSizeOuter(0))
+        graph.append("g")
+            .attr("transform", 'translate(0, 0)')
+            .attr("class", "topAxis axis axis--x")
+            .call(d3.axisTop(thisAxis).tickSizeOuter(0))
     }
 
     // Bottom axis position
     //
     else {
-        myLogger.info('Bottom axis position');
-        var graph = svgContainer.append("g")
-          .attr("transform", `translate(${x_box_min}, ${y_box_max})`);
-
-      // Bottom axis
-      //
-      var theAxis = graph.append("g")
-          .attr("class", "axis axis--x")
-          //.attr("transform", `translate(0, ${y_box_max})`)
-          .call(d3.axisBottom(thisAxis).tickSizeOuter(0).ticks(2))
+        graph.append("g")
+            .attr("transform", `translate( ${x_box_min}, ${y_box_max} )`)
+            .attr("class", "bottomAxis axis axis--x")
+            .call(d3.axisBottom(thisAxis).tickSizeOuter(0))
     }
 
     // Axis label
     //
-    myLogger.info("axis_label");
-    myLogger.info(axis_label);
     if(axis_label) {
 
         // Determine text width for label placement
@@ -591,9 +578,25 @@ function textSize(text) {
   return {width, height}
 }
 
+function getSvg(svgElement) {
+    myLogger.info('getSvg')
+    myLogger.info(svgElement)
+
+    let svg = d3.select(svgElement); // Select your SVG element
+
+    let boundingBox = svg.node().getBBox(); // Get bounding box
+
+    return {x: boundingBox.x, y: boundingBox.y, width: boundingBox.width, height: boundingBox.height} 
+}
+    
 function getLegendPosition(svgElement) {
+    myLogger.info('getLegendPosition')
+    myLogger.info(svgElement)
+    myLogger.info(svgElement)
     let elem = document.querySelector(svgElement);
     let svg  = elem.ownerSVGElement;
+    myLogger.info('getLegendPosition')
+    myLogger.info(elem)
 
     // Get the x and y coordinates
     //
