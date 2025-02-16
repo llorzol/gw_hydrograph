@@ -3,8 +3,8 @@
 *
 * usgsService is a JavaScript library to parse the RDB output from NwisWeb output.
 *
-* version 1.13
-* February 9, 2025
+* version 1.14
+* February 15, 2025
 *
 */
 
@@ -293,9 +293,6 @@ function parseGwRDB(dataRDB) {
                         minute: '2-digit'
                       };
 
-    lastDate = null;
-    gapDates = [];
-
     for(let i = 0; i < myData.length; i++) {
         let myRecord = myData[i];
         for (let key in myDataDict) {
@@ -355,37 +352,7 @@ function parseGwRDB(dataRDB) {
         myRecord.date    = myDate;
         myRecord.lev_dtm = lev_dtm;
         myRecord.tooltip = toolTip;
-
-        // Check for gaps in record over 1 yr
-        //
-        if(lastDate) {
-            // Calculate the time difference in milliseconds
-            //
-            const timeDifferenceMS   = myDate - lastDate;
-            const timeDifferenceDays = Math.floor(timeDifferenceMS / 86400000);
-            if(timeDifferenceDays > gapDays) {
-                myLogger.info(`Gap needed before ${lev_dt} ${lev_tm} ${timeDifferenceDays}`);
-                gapRecord = JSON.parse(JSON.stringify(myRecord));
-                gapRecord.date = new Date(myDate - timeDifferenceMS * 0.5);
-                gapRecord.lev_va = null;
-                gapRecord.toolTip     = `Waterlevel: ${lev_va} (${lev_status}) on ${gapRecord.date}`;
-                gapDates.push(gapRecord);
-                //let myDate = new Date(Date.UTC(myYear, myMonth - 1, myDay, myHour, myMinute));
-            }
-        }
-        lastDate = myDate;
     }
-    myLogger.info('gapDates');
-    myLogger.info(gapDates);
-
-    // Insert point to produce gap
-    //
-    for (let i = gapDates.length - 1; i >= 0; i--) {
-        let myRecord = gapDates[i];
-        let indexNum = myRecord.id;
-        myData.splice(indexNum, 0, myRecord);
-    }
-    
 
     let Obstructed = myData.filter(line => line.lev_status_cd == 'Obstructed');
     myLogger.info('myData');
