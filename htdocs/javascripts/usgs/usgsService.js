@@ -3,8 +3,8 @@
 *
 * usgsService is a JavaScript library to parse the RDB output from NwisWeb output.
 *
-* version 1.14
-* February 15, 2025
+* version 1.16
+* February 16, 2025
 *
 */
 
@@ -31,10 +31,96 @@
 # DEALINGS IN THE SOFTWARE.
 ###############################################################################
 */
-let gapDays = 365;
-                           
-function parseSiteRDB (dataRDB) {
-    myLogger.info('parseSiteRDB');
+ 
+// Retrieve information
+//
+function usgsRequest(nwis_text, nwis_column, data_input) {
+    myLogger.info("usgsRequest");
+
+    // Build ajax requests
+    //
+    let webRequests  = [];
+
+    // Request for site information
+    //
+    let request_type = "GET";
+    let script_http  = `https://waterservices.usgs.gov/nwis/site/?format=rdb&sites=${nwis_text}&siteOutput=expanded&siteStatus=all`
+    let data_http    = '';
+    let dataType     = "text";
+    myLogger.info(`Site service ${script_http}`);
+
+    // Web request
+    //
+    webRequests.push($.ajax( {
+        method:   request_type,
+        url:      script_http,
+        data:     data_http,
+        dataType: dataType,
+        success: function (myData) {
+            message = "Processed USGS Site information";
+            openModal(message);
+            fadeModal(2000);
+            [mySiteRecords, mySiteLegend] = parseSiteUSGS(myData);
+        },
+        error: function (error) {
+            message = `Failed to load USGS Site information ${error}`;
+            openModal(message);
+            fadeModal(2000);
+            return false;
+        }
+    }));
+
+    // Request for groundwater information
+    //
+    //https://nwis.waterdata.usgs.gov/nwis/gwlevels?search_site_no=423623121174001&search_parameter_cd=72019&format=rdb&date_format=YYYY-MM-DD&list_of_search_criteria=search_site_no,search_parameter_cd
+    //
+    request_type = "GET";
+    script_http  = `https://nwis.waterdata.usgs.gov/nwis/gwlevels?search_site_no=${nwis_text}&search_site_no_match_type=exact&group_key=NONE&sitefile_output_format=html_table&column_name=agency_cd&column_name=site_no&column_name=station_nm&format=rdb&date_format=YYYY-MM-DD&rdb_compression=value&list_of_search_criteria=search_site_no`
+    data_http    = '';
+    dataType     = "text";
+    myLogger.info(`Groundwater service ${script_http}`);
+
+    // Web request
+    //
+    webRequests.push($.ajax( {
+        method:   request_type,
+        url:      script_http,
+        data:     data_http,
+        dataType: dataType,
+        success: function (myData) {
+            message = "Processed USGS Groundwater Measurement information";
+            openModal(message);
+            fadeModal(2000);
+            [myGwRecords, myGwLegend] = parseGwUSGS(myData);
+        },
+        error: function (error) {
+            message = `Failed to load USGS Groundwater Measurement information ${error}`;
+            openModal(message);
+            fadeModal(2000);
+            return false;
+        }
+    }));
+
+   // Run ajax requests
+   //
+    $.when.apply($, webRequests).then(function() {
+
+        fadeModal(2000);
+        myLogger.info('NWIS output')
+        myLogger.info(mySiteRecords)
+        myLogger.info(mySiteLegend)
+        myLogger.info(myGwRecords)
+        myLogger.info(myGwLegend)
+
+        buildTablesPanel(mySiteRecords, myGwRecords);
+
+        buildHydrographPanel(mySiteRecords, myGwRecords);
+    });
+
+}
+                          
+function parseSiteUSGS (dataRDB) {
+    myLogger.info('parseSiteUSGS');
     //myLogger.info(dataRDB);
 
    var message = 'Retrieving site information';
@@ -112,8 +198,8 @@ function parseSiteRDB (dataRDB) {
     return [ myData, myDataDict ];
 }
 
-function parseGwRDB(dataRDB) {
-    myLogger.info('parseGwRDB');
+function parseGwUSGS(dataRDB) {
+    myLogger.info('parseGwUSGS');
     //myLogger.info(dataRDB);
 
     let myData;
