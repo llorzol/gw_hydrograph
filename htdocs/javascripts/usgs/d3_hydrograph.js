@@ -82,7 +82,9 @@ var statusCodes = {
     '9': 'Value was revised after publication as an approved value'
 }
 let statusCodeL = Object.values(statusCodes);
-    
+
+let gapDays = 365;
+
 // Set color and symbol for water-level status codes
 //
 const colorScale = d3.scaleOrdinal()
@@ -343,11 +345,6 @@ function plotHydrograph(
     //
     jQuery(".printSvg").click(function() {
         myLogger.info("printSvg method");
-        //const svg = d3.select("#svgCanvas").node();
-        //const svg = document.querySelector('svg');
-        //const svgClone = svg.cloneNode(true);
-        //svgClone.id = 'svgClone';
-        //myLogger.info(svgClone);
 
         const svgClone = d3.select('svg')
               .clone(true)
@@ -357,7 +354,7 @@ function plotHydrograph(
         // ...
         myLogger.info('svgClone');
         myLogger.info(svgClone);
-        var myUsgs = USGS_logo(svgClone, 'US Geological Survey', svg_width, svg_height, 45)
+        var myUsgs = USGS_logo(svgClone, 'US Geological Survey', svg_width, svg_height, 30)
         const svgElement = document.querySelector('#svgClone');
         
         const svgString = new XMLSerializer().serializeToString(svgElement);
