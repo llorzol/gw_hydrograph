@@ -296,6 +296,7 @@ function timeAxis(
     // Axis
     //
     let graph = d3.select(`#${axisID}`)
+        .append("g")
     myLogger.info(graph)
 
     // Axis scale
@@ -304,13 +305,17 @@ function timeAxis(
     let thisAxis = d3.scaleTime()
         .domain([new Date(minDate), new Date(maxDate)]).nice()
         .range([0, width])
+    
+    // Set
+    //
+    let labelOffset = 1;
+    let y_label     = y_box_min;
 
     // Top axis position
     //
     if(axis_side.toLowerCase() == 'top') {
-
-        graph.append("g")
-            .attr("transform", 'translate(0, 0)')
+        labelOffset = -1;
+        graph.attr("transform", `translate( ${x_box_min}, ${y_box_min} )`)
             .attr("class", "topAxis axis axis--x")
             .call(d3.axisTop(thisAxis).tickSizeOuter(0))
     }
@@ -318,8 +323,8 @@ function timeAxis(
     // Bottom axis position
     //
     else {
-        graph.append("g")
-            .attr("transform", `translate( ${x_box_min}, ${y_box_max} )`)
+        y_label = y_box_max;
+        graph.attr("transform", `translate( ${x_box_min}, ${y_box_max} )`)
             .attr("class", "bottomAxis axis axis--x")
             .call(d3.axisBottom(thisAxis).tickSizeOuter(0))
     }
@@ -328,28 +333,22 @@ function timeAxis(
     //
     if(axis_label) {
 
-        // Determine text width for label placement
+        // Determine axis tic dimensions
         //
-        var text_label  = String('MAX');
-        var text_length = text_label.length;
-        myLogger.debug(`text_label ${text_label}`);
-
-        var myText      = svgContainer.append("text")
-            .attr("class", "tic_labels")
-            .text(text_label);
-        var textInfo    = textSize(myText)
-        var text_height = textInfo.height;
+        axisInfo  = getSvg(`.${axis_side}Axis`)
+        xPosition = axisInfo.x
+        yPosition = axisInfo.y
+        ticWidth  = axisInfo.width
+        ticHeight = axisInfo.height
+        myLogger.info(`Axis label ${axis_side}Axis x ${xPosition} y ${yPosition} ticWidth ${ticWidth} ticHeight ${ticHeight}`)
 
         // Axis label
         //
-        var labelOffset = text_height * 4
-        var label       = "translate("
-        label          += [(x_box_max + x_box_min ) * 0.5, y_box_max + labelOffset].join(", ");
-        label          += ")";
-
-        var axis_label = svgContainer.append("g")
+        d3.select(`#${axisID}`)
+            .append("g")
+            .attr("id", "x-axis-label")
             .append("text")
-            .attr("transform", label)
+            .attr("transform", `translate(${(x_box_max + x_box_min ) * 0.5}, ${y_label + ticHeight * 2 * labelOffset})`)
             .attr('class', 'x_axis_label')
             .style("text-anchor", "middle")
             .style("font-family", "sans-serif")
