@@ -5,7 +5,7 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.19
+ * version 1.20
  * February 15, 2025
 */
 
@@ -138,7 +138,7 @@ function plotHydrograph(
         .attr('viewBox', viewBox)
         .attr('fill', 'white')
 
-    // Draw graph
+    // Draw zoom plot box 
     //
     axisBox(
         svg,
@@ -150,7 +150,7 @@ function plotHydrograph(
         "none"
     );
 
-    // Draw brush graph
+    // Draw brush plot box
     //
     axisBox(
         svg,
@@ -180,18 +180,54 @@ function plotHydrograph(
         .style("fill", 'black')
         .text(`Site ${siteTitle.join(' -- ')}`)
 
-    // Identify Dry conditions
+    // Identify Gap in record (over 1 yr) and Dry conditions
     //
     let dryRecords = myGwRecords.filter(line => line.lev_status_cd == 'Dry');
     myLogger.info('dryRecords');
     myLogger.info(dryRecords);
     let firstTime = null;
 
+    gapDate  = null;
+    gapDates = [];
+
     for(let i = 0; i < myGwRecords.length; i++) {
         let myRecord = myGwRecords[i];
 
+        // Dry conditions
+        //
         if(myRecord.lev_status_cd == 'Dry') { myRecord.lev_va = wellDepth; }
+
+        // Check for gaps in record over 1 yr
+        //
+        let myDate = new Date(myRecord.date);
+        if(gapDate) {
+            // Calculate the time difference in milliseconds
+            //
+            const timeDifferenceMS   = myDate - gapDate;
+            const timeDifferenceDays = Math.floor(timeDifferenceMS / 86400000);
+            if(timeDifferenceDays > gapDays) {
+                myLogger.info(`Gap needed before ${myRecord.lev_dt} ${myRecord.lev_tm} ${timeDifferenceDays}`);
+                gapRecord = JSON.parse(JSON.stringify(myRecord));
+                gapRecord.date = new Date(myDate - timeDifferenceMS * 0.5);
+                gapRecord.lev_va = null;
+                gapRecord.lev_src_cd = 'Gap Record';
+                gapRecord.toolTip     = `Waterlevel: Gap on ${gapRecord.date}`;
+                gapDates.push(gapRecord);
+                //let myDate = new Date(Date.UTC(myYear, myMonth - 1, myDay, myHour, myMinute));
+            }
+        }
+        gapDate = myDate;
     }
+    myLogger.info('gapDates');
+    myLogger.info(gapDates);
+
+    // Insert point to produce gap
+    //
+    for (let i = gapDates.length - 1; i >= 0; i--) {
+        let myRecord = gapDates[i];
+        let indexNum = myRecord.id;
+        myGwRecords.splice(indexNum, 0, myRecord);
+    }    
 
     // Max and min waterlevel values
     //
