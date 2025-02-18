@@ -4,8 +4,8 @@
  * d3_AxisFunctions is a JavaScript library to provide a set of functions to build
  *  axes and labelling for well construction and lithology applications in svg format.
  *
- * version 3.16
- * February 15, 2025
+ * version 3.18
+ * February 17, 2025
 */
 
 /*
