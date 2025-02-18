@@ -1,7 +1,7 @@
 <!doctype html>
 
-<!-- version 1.06 -->
-<!-- version_date February 6, 2025 -->
+<!-- version 1.08 -->
+<!-- version_date February 17, 2025 -->
 
 <html lang="en">
   <head>
@@ -39,29 +39,28 @@
           <div class="bg-success bg-gradient fs-5 fw-bold text-white text-center rounded-top ps-1 py-2">DATA EXPLORATION TOOL</div>
         </div>
         
-        <div id="nwisQuery" class="row">
+        <div id="dataQuery" class="row">
           <div class="col-sm-4">
-            <div class="bg-dark bg-gradient fs-6 fw-bold text-white text-start rounded-top mt-2 ps-1 py-1">NWIS Identifier</div>
+            <div class="bg-dark bg-gradient fs-6 fw-bold text-white text-start rounded-top mt-2 ps-1 py-1">Site Identifier</div>
             <div class="form-floating mb-3 pe-1">
-              <input type="text" class="form-control form-select-sm" id="nwis_text" placeholder="s">
-              <label for="nwis_text">Enter site number or other identifier</label>
+              <input type="text" class="form-control form-select-sm" id="siteIdentifier" placeholder="s">
+              <label for="siteIdentifier">Enter site identifier</label>
             </div>
           </div>
 
           <div class="col-sm-4">
               <div class="bg-dark bg-gradient fs-6 fw-bold text-white text-start rounded-top mt-2 ps-1 py-1">Search Field</div>
-              <select id="nwis_column" class="form-select form-select-sm" aria-label="Choose the type identifier entered">
+              <select id="columnIdentifier" class="form-select form-select-sm" aria-label="Choose the type identifier entered">
                 <option id="choose" value="choose">Choose the type identifier entered</option>
-                <option id="site_no" value="site_no">Site Number</option>
-                <option id="coop_site_no" value="coop_site_no">Cooperator Site Number</option>
-                <option id="station_nm" value="station_nm">Station Name</option>
-                <option id="otid" value="otid">Other ID</option>
+                <option id="site_no" value="site_no">USGS Site Number</option>
+                <option id="coop_site_no" value="coop_site_no">OWRD Cooperator Site Number</option>
+                <option id="site_code" value="site_code">CDWR Site Code</option>
               </select>
           </div>
 
           <div class="col-sm-4">
-              <div class="bg-dark bg-gradient fs-6 fw-bold text-white text-start rounded-top mt-2 ps-1 py-1">NWIS File Information</div>
-              <select id="data_input" class="form-select form-select-sm" aria-label="Choose the type file output">
+              <div class="bg-dark bg-gradient fs-6 fw-bold text-white text-start rounded-top mt-2 ps-1 py-1">Database Information</div>
+              <select id="sourceIdentifier" class="form-select form-select-sm" aria-label="Choose the type file output">
                 <option id="choose" value="choose">Choose the type of data input</option>
                 <option id="usgs" value="usgs">USGS source</option>
                 <option id="owrd" value="owrd">OWRD source</option>
@@ -90,21 +89,21 @@
           </ul>
 
           <div class="tab-content mt-3" id="myTabContent">
+            
             <div class="tab-pane fade show active" id="hydrograph" role="tabpanel" aria-labelledby="hydrograph-tab">
               <div id="gwHydrograph" class="col-sm-12 mt-3 ps-1 py-1"></div>
-
               <!-- Print button -->
               <div class="row mb-4 pt-1">
                 <div id="printButton" class="col-sm-12">
-                  <!-- <button id="downloadSVG" class="exportSvg" >Download Well Construction</button> -->
                   <button id="printSVG" class="printSvg border border-3 border-black-subtle rounded" >Print Hydrograph</button>
                 </div>
               </div>              
             </div>
             
             <div class="tab-pane fade" id="tables" role="tabpanel" aria-labelledby="tables-tab">
-              <div id="nwisResults" class="col-sm-12 mt-3 mb-4 ps-1 py-1"></div>
+              <div id="dataResults" class="col-sm-12 mt-3 mb-4 ps-1 py-1"></div>
             </div>
+            
           </div>
         </div>
         
@@ -120,6 +119,7 @@
     <script src="javascripts/required/tether.min.js"></script>
     <script src="javascripts/required/popper.min.js"></script>
     <script src="javascripts/required/d3.min.js"></script>
+    <script src="javascripts/required/d3-line-chunked.js"></script>
     
     <!-- Supporting local scripts  -->
     <link rel="stylesheet" href="datatables/datatables.min.css">
@@ -132,6 +132,8 @@
     <script src="javascripts/usgs/modal.js"></script>
     <script src="javascripts/usgs/webRequest.js"></script>
     <script src="javascripts/usgs/usgsService.js"></script>
+    <script src="javascripts/usgs/owrdService.js"></script>
+    <script src="javascripts/usgs/cdwrService.js"></script>
     <script src="javascripts/usgs/urlArguments.js"></script>
     <script src="javascripts/usgs/d3.AxisFunctions.js"></script>
     <script src="javascripts/usgs/d3_hydrograph.js"></script>
