@@ -3,8 +3,8 @@
 *
 * usgsService is a JavaScript library to parse the RDB output from NwisWeb output.
 *
-* version 1.16
-* February 16, 2025
+* version 1.18
+* February 17, 2025
 *
 */
 
@@ -34,7 +34,7 @@
  
 // Retrieve information
 //
-function usgsRequest(nwis_text, nwis_column, data_input) {
+function usgsRequest(siteIdentifier, columnIdentifier, sourceIdentifier) {
     myLogger.info("usgsRequest");
 
     // Build ajax requests
@@ -44,7 +44,7 @@ function usgsRequest(nwis_text, nwis_column, data_input) {
     // Request for site information
     //
     let request_type = "GET";
-    let script_http  = `https://waterservices.usgs.gov/nwis/site/?format=rdb&sites=${nwis_text}&siteOutput=expanded&siteStatus=all`
+    let script_http  = `https://waterservices.usgs.gov/nwis/site/?format=rdb&sites=${siteIdentifier}&siteOutput=expanded&siteStatus=all`
     let data_http    = '';
     let dataType     = "text";
     myLogger.info(`Site service ${script_http}`);
@@ -75,7 +75,7 @@ function usgsRequest(nwis_text, nwis_column, data_input) {
     //https://nwis.waterdata.usgs.gov/nwis/gwlevels?search_site_no=423623121174001&search_parameter_cd=72019&format=rdb&date_format=YYYY-MM-DD&list_of_search_criteria=search_site_no,search_parameter_cd
     //
     request_type = "GET";
-    script_http  = `https://nwis.waterdata.usgs.gov/nwis/gwlevels?search_site_no=${nwis_text}&search_site_no_match_type=exact&group_key=NONE&sitefile_output_format=html_table&column_name=agency_cd&column_name=site_no&column_name=station_nm&format=rdb&date_format=YYYY-MM-DD&rdb_compression=value&list_of_search_criteria=search_site_no`
+    script_http  = `https://nwis.waterdata.usgs.gov/nwis/gwlevels?search_site_no=${siteIdentifier}&search_site_no_match_type=exact&group_key=NONE&sitefile_output_format=html_table&column_name=agency_cd&column_name=site_no&column_name=station_nm&format=rdb&date_format=YYYY-MM-DD&rdb_compression=value&list_of_search_criteria=search_site_no`
     data_http    = '';
     dataType     = "text";
     myLogger.info(`Groundwater service ${script_http}`);
@@ -123,8 +123,10 @@ function parseSiteUSGS (dataRDB) {
     myLogger.info('parseSiteUSGS');
     //myLogger.info(dataRDB);
 
-   var message = 'Retrieving site information';
-   openModal(message);
+    let message = 'Retrieving site information';
+    openModal(message);
+
+    let myData = null;
                            
     // Parse in lines
     //
@@ -416,10 +418,10 @@ function parseGwUSGS(dataRDB) {
             datePST         = new Intl.DateTimeFormat("en-US", ymOptions).format(myDate);
         }
         else if(lev_dt_acy === 'Date is accurate to the Year') {
-            datePST         = yFormat(myRecord.date);
+            datePST         = new Intl.DateTimeFormat("en-US", yOptions).format(myDate);
         }
         else {
-            datePST         = yFormat(myRecord.date);
+            datePST         = new Intl.DateTimeFormat("en-US", yOptions).format(myDate);
         }
         let lev_dtm = new Intl.DateTimeFormat("en-US",dateOptions).format(myDate);
         //myLogger.info(`Date ${lev_dt} ${lev_tm} ${lev_dt_acy}   ${lev_dtm} ===> ${datePST} `);
