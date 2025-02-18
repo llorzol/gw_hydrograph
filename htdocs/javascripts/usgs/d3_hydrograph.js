@@ -1,12 +1,12 @@
 /**
- * Namespace: D3_Hydrology
+ * Namespace: D3_Hydrograph
  *
- * D3_Hydrology is a JavaScript library to provide a set of functions to build
+ * D3_Hydrograph is a JavaScript library to provide a set of functions to build
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.20
- * February 15, 2025
+ * version 1.22
+ * February 17, 2025
 */
 
 /*
@@ -123,7 +123,7 @@ function plotHydrograph(
     let siteTitle = [];
     if(siteData.site_no) { siteTitle.push(`USGS ${siteData.site_no}`); }
     if(siteData.coop_site_no) { siteTitle.push(`OWRD ${siteData.coop_site_no}`); }
-    if(siteData.coop_site_no) { siteTitle.push(`CDWR ${siteData.cdwr_id}`); }
+    if(siteData.site_code) { siteTitle.push(`CDWR ${siteData.site_code}`); }
     if(siteData.station_nm) { siteTitle.push(`${siteData.station_nm}`); }
 
     // SVG canvas
@@ -259,6 +259,8 @@ function plotHydrograph(
     //
     let land_surface  = siteData.alt_va;
     let verticalDatum = siteData.alt_datum_cd;
+    if(siteData.lsd_elevation) { land_surface = siteData.lsd_elevation; }
+    if(siteData.elevation_datum) { verticalDatum = siteData.elevation_datum; }
     myLogger.info(`Site information land surface ${land_surface} vertical datum ${verticalDatum}`);
 
     let elevation_max = land_surface;
