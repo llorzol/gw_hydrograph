@@ -4,8 +4,8 @@
  * Main is a JavaScript library to provide a set of functions to manage
  *  the web requests.
  *
- * version 1.09
- * February 16, 2025
+ * version 1.10
+ * February 17, 2025
 */
 
 /*
@@ -45,10 +45,10 @@ let mySiteLegend;
 let myGwRecords;
 let myGwLegend;
 
-let myData      = null;   
-let nwis_text   = null;
-let nwis_column = null;
-let data_input = null;
+let myData           = null;   
+let siteIdentifier   = null;
+let columnIdentifier = null;
+let sourceIdentifier = null;
 
 // loglevel
 //
@@ -62,13 +62,13 @@ $(document).ready(function() {
 
     // Reset selected option
     //-------------------------------------------------
-    $("#nwis_text").val('');
-    $("#nwis_column").val('choose');
-    $("#data_input").val('choose');
+    $("#siteIdentifier").val('');
+    $("#columnIdentifier").val('choose');
+    $("#sourceIdentifier").val('choose');
         
-    jQuery("div#nwisQuery").show();
+    jQuery("div#dataQuery").show();
     jQuery("div#gwHydrograph").hide();
-    jQuery("div#nwisResults").hide();
+    jQuery("div#dataResults").hide();
 
     // Submit request
     //
@@ -99,47 +99,47 @@ $(document).ready(function() {
     let url = new URL(window.location.href);
     myLogger.info(`Current Url ${window.location.href}`);
     myLogger.info(`Current Params ${url.searchParams}`);
-    myLogger.info(`Current Params ${url.searchParams.has("nwis_text")}`);
-    myLogger.info(`Current Params ${url.searchParams.has("nwis_column")}`);
-    myLogger.info(`Current Params ${url.searchParams.has("data_input")}`);
+    myLogger.info(`Current Params ${url.searchParams.has("siteIdentifier")}`);
+    myLogger.info(`Current Params ${url.searchParams.has("columnIdentifier")}`);
+    myLogger.info(`Current Params ${url.searchParams.has("sourceIdentifier")}`);
     
     // Url contains all arguments
     //-------------------------------------------------
-    if(url.searchParams.has("nwis_text") &&
-       url.searchParams.has("nwis_column") &&
-       url.searchParams.has("data_input")) {
+    if(url.searchParams.has("siteIdentifier") &&
+       url.searchParams.has("columnIdentifier") &&
+       url.searchParams.has("sourceIdentifier")) {
 
         // Set selected option
         //-------------------------------------------------
-        $("#nwis_text").val(url.searchParams.get("nwis_text"));
-        nwis_text = $('#nwis_text').val().trim();
-        $("#nwis_column").val(url.searchParams.get("nwis_column"));
-        nwis_column = $('#nwis_column').val();
-        $("#data_input").val(url.searchParams.get("data_input"));
-        data_input = $('#data_input').val();            
+        $("#siteIdentifier").val(url.searchParams.get("siteIdentifier"));
+        siteIdentifier = $('#siteIdentifier').val().trim();
+        $("#columnIdentifier").val(url.searchParams.get("columnIdentifier"));
+        columnIdentifier = $('#columnIdentifier').val();
+        $("#sourceIdentifier").val(url.searchParams.get("sourceIdentifier"));
+        sourceIdentifier = $('#sourceIdentifier').val();            
 
         // Loading message
         //
-        message = `Submitting request for site ${nwis_text}`;
+        message = `Submitting request for site ${siteIdentifier}`;
         openModal(message);
         fadeModal(2000);
 
         myLogger.info(`Submitting url ${url}`);
-        myLogger.info(`Setting nwis_text ${nwis_text} nwis_column ${nwis_column} data_input ${data_input}`);
+        myLogger.info(`Setting siteIdentifier ${siteIdentifier} columnIdentifier ${columnIdentifier} sourceIdentifier ${sourceIdentifier}`);
 
         // Submit request
         //
         submitRequest();
         //if(checkRequest(url.toString())) {
-        //    usgsRequest(nwis_text, nwis_column, data_input)
+        //    usgsRequest(siteIdentifier, columnIdentifier, sourceIdentifier)
         //}
     }
     
-    // Url contains nwis_text and nwis_column
+    // Url contains siteIdentifier and columnIdentifier
     //-------------------------------------------------
-    else if(url.searchParams.has("nwis_text") ||
-       url.searchParams.has("nwis_column") ||
-       url.searchParams.has("data_input")) {
+    else if(url.searchParams.has("siteIdentifier") ||
+       url.searchParams.has("columnIdentifier") ||
+       url.searchParams.has("sourceIdentifier")) {
 
         // Loading message
         //
@@ -151,19 +151,19 @@ $(document).ready(function() {
 
         // Set selected option
         //-------------------------------------------------
-        if(url.searchParams.has("nwis_text")) {
-            $("#nwis_text").val(url.searchParams.get("nwis_text"));
-            nwis_text = $('#nwis_text').val().trim();            
+        if(url.searchParams.has("siteIdentifier")) {
+            $("#siteIdentifier").val(url.searchParams.get("siteIdentifier"));
+            siteIdentifier = $('#siteIdentifier').val().trim();            
         }
-        if(url.searchParams.has("nwis_column")) {
-            $("#nwis_column").val(url.searchParams.get("nwis_column"));
-            nwis_column = $('#nwis_column').val();            
+        if(url.searchParams.has("columnIdentifier")) {
+            $("#columnIdentifier").val(url.searchParams.get("columnIdentifier"));
+            columnIdentifier = $('#columnIdentifier').val();            
         }
-        if(url.searchParams.has("data_input")) {
-            $("#data_input").val(url.searchParams.get("data_input"));
-            data_input = $('#data_input').val();            
+        if(url.searchParams.has("sourceIdentifier")) {
+            $("#sourceIdentifier").val(url.searchParams.get("sourceIdentifier"));
+            sourceIdentifier = $('#sourceIdentifier').val();            
         }
-        myLogger.info(`Setting nwis_text ${nwis_text} nwis_column ${nwis_column} data_input ${data_input}`);
+        myLogger.info(`Setting siteIdentifier ${siteIdentifier} columnIdentifier ${columnIdentifier} sourceIdentifier ${sourceIdentifier}`);
     }
 
     // Show form
@@ -188,9 +188,9 @@ function submitRequest() {
 
     // Clear results for request
     //
-    if(jQuery("div#nwisResults").length) {
-        jQuery("div#nwisResults").hide();
-        $("div#nwisResults").html('');
+    if(jQuery("div#dataResults").length) {
+        jQuery("div#dataResults").hide();
+        $("div#dataResults").html('');
     }
     if(jQuery("div#gwHydrograph").length) {
         jQuery("div#gwHydrograph").hide();
@@ -199,18 +199,18 @@ function submitRequest() {
 
     // Pull results from form
     //
-    nwis_text   = $('#nwis_text').val().trim();
-    nwis_column = $('#nwis_column').val();
-    data_input = $('#data_input').val();
-    myLogger.info(`Processing NWIS nwis_text ${nwis_text} nwis_column ${nwis_column} data_input ${data_input}`);
+    siteIdentifier   = $('#siteIdentifier').val().trim();
+    columnIdentifier = $('#columnIdentifier').val();
+    sourceIdentifier = $('#sourceIdentifier').val();
+    myLogger.info(`Processing Site siteIdentifier ${siteIdentifier} columnIdentifier ${columnIdentifier} sourceIdentifier ${sourceIdentifier}`);
 
     // Refresh URL with form results
     //
     let url = new URL(window.location.href);
-    url.searchParams.set("nwis_text", nwis_text);
-    url.searchParams.set("nwis_column", nwis_column);
-    url.searchParams.set("data_input", data_input);
-    myLogger.info(`Submitting url ${url} -> nwis_text ${nwis_text} nwis_column ${nwis_column} data_input ${data_input}`);
+    url.searchParams.set("siteIdentifier", siteIdentifier);
+    url.searchParams.set("columnIdentifier", columnIdentifier);
+    url.searchParams.set("sourceIdentifier", sourceIdentifier);
+    myLogger.info(`Submitting url ${url} -> siteIdentifier ${siteIdentifier} columnIdentifier ${columnIdentifier} sourceIdentifier ${sourceIdentifier}`);
 
     window.history.pushState(null, '', url.toString());
     myLogger.info("Modified Url " + window.location.href);
@@ -218,18 +218,26 @@ function submitRequest() {
     // Submit request if parameters are valid
     //
     if(checkRequest(url.toString())) {
-        usgsRequest(nwis_text, nwis_column, data_input)
+        if(sourceIdentifier === 'usgs') {
+            usgsRequest(siteIdentifier, columnIdentifier, sourceIdentifier)
+        }
+        else if(sourceIdentifier === 'owrd') {
+            owrdRequest(siteIdentifier, columnIdentifier, sourceIdentifier)
+        }
+        else if(sourceIdentifier === 'cdwr') {
+            cdwrRequest(siteIdentifier, columnIdentifier, sourceIdentifier)
+        }
     }
-    myLogger.info(`Submitted url ${url} -> nwis_text ${nwis_text} nwis_column ${nwis_column} data_input ${data_input}`);
+    myLogger.info(`Submitted url ${url} -> siteIdentifier ${siteIdentifier} columnIdentifier ${columnIdentifier} sourceIdentifier ${sourceIdentifier}`);
 }
 
 // Reset Url and form
 //
 function clearResults() {
 
-    jQuery("div#nwisQuery").show();
-    jQuery("div#nwisResults").hide();
-    $("div#nwisResults").html('');
+    jQuery("div#dataQuery").show();
+    jQuery("div#dataResults").hide();
+    $("div#dataResults").html('');
     jQuery("div#gwHydrograph").hide();
     $("div#gwHydrograph").html('');
     jQuery("button#printSVG").hide();
@@ -238,24 +246,24 @@ function clearResults() {
 // Reset Url and form
 //
 function clearForm() {
-    $("#nwis_text").val('');
-    $("#nwis_column").val('choose');
-    $("#data_input").val('choose');
+    $("#siteIdentifier").val('');
+    $("#columnIdentifier").val('choose');
+    $("#sourceIdentifier").val('choose');
 
-    jQuery("div#nwisQuery").show();
-    jQuery("div#nwisResults").hide();
-    $("div#nwisResults").html('');
+    jQuery("div#dataQuery").show();
+    jQuery("div#dataResults").hide();
+    $("div#dataResults").html('');
     jQuery("div#gwHydrograph").hide();
     $("div#gwHydrograph").html('');
     jQuery("button#printSVG").hide();
 
     let url = new URL(window.location.href);
     myLogger.info("Current Url " + url);
-    url.searchParams.delete('nwis_text');
+    url.searchParams.delete('siteIdentifier');
     myLogger.info("Current Url " + url);
-    url.searchParams.delete('nwis_column');
+    url.searchParams.delete('columnIdentifier');
     myLogger.info("Current Url " + url);
-    url.searchParams.delete('data_input');
+    url.searchParams.delete('sourceIdentifier');
     myLogger.info("Current Url " + url);
     window.history.pushState(null, '', url.toString());
 }
@@ -268,17 +276,61 @@ function checkRequest() {
 
     let url = new URL(window.location.href);
     myLogger.info(`Current Url ${url}`);
-
-    // Parse
+        
+    // Parse source input first
     //-------------------------------------------------
-    if(url.searchParams.has("nwis_text")) {
-        nwis_text = url.searchParams.get("nwis_text");
-        myLogger.info(`Parse nwis_text ${nwis_text}`);
+    if(url.searchParams.has("sourceIdentifier")) {
+        sourceIdentifier = url.searchParams.get("sourceIdentifier").toLowerCase();
+        myLogger.info(`Parse sourceIdentifier ${sourceIdentifier}`);
 
-        nwis_text = checkSiteId(nwis_text);
-        myLogger.info(`Check nwis_text ${nwis_text}`);
+        const inputL = ["usgs", "owrd", "cdwr"];
 
-        if(!nwis_text) {
+        if(!inputL.includes(sourceIdentifier)) {
+            message = `Choose one: Input source options: ${inputL.join(', ')} `;
+            openModal(message);
+            fadeModal(6000);
+
+            return false;
+        }
+    }
+
+    let searchCols = ["site_no", "coop_site_no", "site_code"];
+    if(sourceIdentifier === 'usgs') { searchCols = ["site_no"]; }
+    else if(sourceIdentifier === 'owrd') { searchCols = ["coop_site_no"]; }
+    else if(sourceIdentifier === 'cdwr') { searchCols = ["site_code"]; }
+    else {
+        message = 'Choose site number for USGS source, cooperator site number for OWRD source, or site_code for CDWR source';
+        openModal(message);
+        fadeModal(10000);
+
+        return false;
+    }
+        
+    // Determine if search Column matches source
+    //-------------------------------------------------
+    if(url.searchParams.has("columnIdentifier")) {
+        columnIdentifier = url.searchParams.get("columnIdentifier").toLowerCase();
+        myLogger.info(`Parse columnIdentifier ${columnIdentifier}`);
+        
+        if(!searchCols.includes(columnIdentifier)) {
+            message = 'Choose one: site number for USGS source, cooperator site number for OWRD source, or site_code for CDWR source';
+            openModal(message);
+            fadeModal(6000);
+
+            return false;
+        }
+    }
+
+    // Parse source input first
+    //-------------------------------------------------
+    if(url.searchParams.has("siteIdentifier")) {
+        siteIdentifier = url.searchParams.get("siteIdentifier");
+        myLogger.info(`Parse siteIdentifier ${siteIdentifier}`);
+
+        siteIdentifier = checkSiteId(siteIdentifier);
+        myLogger.info(`Check siteIdentifier ${siteIdentifier}`);
+
+        if(!siteIdentifier) {
             myLogger.error(`Error ${messageSiteId}`);
             closeModal();
             openModal(messageSiteId);
@@ -294,66 +346,36 @@ function checkRequest() {
 
         return false;
     }
-       
-    if(url.searchParams.has("nwis_column")) {
-        nwis_column = url.searchParams.get("nwis_column");
-        myLogger.info(`Parse nwis_column ${nwis_column}`);
 
-        const nwisCols = ["site_no", "coop_site_no", "station_nm", "otid"];
-        
-        if(!nwisCols.includes(nwis_column.toLowerCase())) {
-            message = 'Choose one: site number, cooperator site number, station name, or other id';
-            openModal(message);
-            fadeModal(6000);
+    myLogger.info(`Processing Site siteIdentifier ${siteIdentifier} columnIdentifier ${columnIdentifier} sourceIdentifier ${sourceIdentifier}`);
 
-            return false;
-        }
-    }
-        
-    if(url.searchParams.has("data_input")) {
-        data_input = url.searchParams.get("data_input");
-        myLogger.info(`Parse data_input ${data_input}`);
-
-        const nwisOuts = ["usgs", "owrd", "cdwr"];
-
-        if(!nwisOuts.includes(data_input.toLowerCase())) {
-            message = 'Choose one: NWIS file options ';
-            openModal(message);
-            fadeModal(6000);
-
-            return false;
-        }
-    }
-
-    myLogger.info(`Processing NWIS nwis_text ${nwis_text} nwis_column ${nwis_column} data_input ${data_input}`);
-
-    // Check arguments need nwis_column and data_input
+    // Check arguments need columnIdentifier and sourceIdentifier
     //
-    if(nwis_text && (!nwis_column || !data_input)) {
+    if(siteIdentifier && (!columnIdentifier || !sourceIdentifier)) {
 
-        message = "Enter search field and NWIS files(s)";
+        message = "Enter search column and source database";
         openModal(message);
         fadeModal(2000);
 
         return false;         
      }
 
-    // Check arguments need nwis_text and data_input
+    // Check arguments need siteIdentifier and sourceIdentifier
     //
-    if(nwis_column && (!nwis_text || !data_input)) {
+    if(columnIdentifier && (!siteIdentifier || !sourceIdentifier)) {
 
-        message = "Enter NWIS Identifier and NWIS files(s)";
+        message = "Enter site Identifier and source database";
         openModal(message);
         fadeModal(2000);
 
         return false;         
      }
 
-    // Check arguments need nwis_text and nwis_column
+    // Check arguments need siteIdentifier and columnIdentifier
     //
-    if(data_input && (!nwis_text || !nwis_column)) {
+    if(sourceIdentifier && (!siteIdentifier || !columnIdentifier)) {
 
-        message = "Enter NWIS Identifier and search field";
+        message = "Enter site Identifier and search column";
         openModal(message);
         fadeModal(2000);
 
@@ -372,8 +394,7 @@ function buildTablesPanel (mySiteRecords, myGwRecords) {
     myLogger.info(myFiles)
 
     if(myFiles) {
-        //jQuery("div#nwisQuery").hide();
-        jQuery("div.nwisResults").show();
+        jQuery("div.dataResults").show();
 
         let filesL = Object.keys(myFiles);
         myLogger.info(filesL);
@@ -385,13 +406,13 @@ function buildTablesPanel (mySiteRecords, myGwRecords) {
             myLogger.info('myRecords')
             myLogger.info(myRecords)
 
-            jQuery("div#nwisResults").append(`<div id="${myTable}Caption" class="fs-4 fw-bold text-center border-bottom border-2 border-black mt-3 ps-1 py-1">NWIS Table: ${myTable} -- ${myRecords.length} records</div>`);
+            jQuery("div#dataResults").append(`<div id="${myTable}Caption" class="fs-4 fw-bold text-center border-bottom border-2 border-black mt-3 ps-1 py-1">Database Table: ${myTable} -- ${myRecords.length} records</div>`);
 
             // Build table with records
             //
             if(myRecords.length > 0) {
 
-                jQuery("div#nwisResults").append(`<div id="${myTable}Table" class="table-responsive fs-6 fw-bold text-center ps-1 py-1"></div>`);
+                jQuery("div#dataResults").append(`<div id="${myTable}Table" class="table-responsive fs-6 fw-bold text-center ps-1 py-1"></div>`);
                 jQuery(`div#${myTable}Table`).html(`<table id="${myTable}" class="table table-sm table-bordered table-hover table-striped-columns align-middle overflow-scroll"></table>`);
 
                 let columnL = myRecords.columns;
@@ -408,7 +429,7 @@ function buildTablesPanel (mySiteRecords, myGwRecords) {
                             buttons: [ 'csv',
                                        {
                                            extend: 'print',
-                                           messageTop: `U.S. Geological Survey Information for NWIS Table: ${myTable}`,
+                                           messageTop: `U.S. Geological Survey Information for DataBase Table: ${myTable}`,
                                            autoPrint: false,
                                            customize: function (doc) {
                                                $(doc.document.body).find('h1').css('font-size', '11pt');
@@ -425,7 +446,7 @@ function buildTablesPanel (mySiteRecords, myGwRecords) {
                                            extend: 'excel',
                                            sheetName: `Table ${myTable}`,
                                            title: '',
-                                           messageTop: `U.S. Geological Survey Information for NWIS Table: ${myTable}`,
+                                           messageTop: `U.S. Geological Survey Information for DataBase Table: ${myTable}`,
                                            customize: function ( xlsx ) {
                                                let sheet = xlsx.xl.worksheets['sheet1.xml'];
                                                $('row:first c', sheet).attr( 's', '17' );
@@ -446,9 +467,9 @@ function buildTablesPanel (mySiteRecords, myGwRecords) {
                     let site_no = this.id.replace('site_', '');
                     myLogger.info(`Clicked site ${site_no}`)
                     let url = new URL(window.location.href);
-                    url.searchParams.set("nwis_text", site_no);
-                    url.searchParams.set("nwis_column", 'site_no');
-                    url.searchParams.set("data_input", 'all');
+                    url.searchParams.set("siteIdentifier", site_no);
+                    url.searchParams.set("columnIdentifier", 'site_no');
+                    url.searchParams.set("sourceIdentifier", 'all');
 
                     window.open(url, '_blank')
                 });
@@ -458,11 +479,11 @@ function buildTablesPanel (mySiteRecords, myGwRecords) {
             // No records message
             //
             else {
-                jQuery("div#nwisResults").append(`<div id="${myTable}Table" class="fs-5 fw-bold text-danger text-center ps-1 py-1">No Records</div>`);
+                jQuery("div#dataResults").append(`<div id="${myTable}Table" class="fs-5 fw-bold text-danger text-center ps-1 py-1">No Records</div>`);
             }
         }
 
-        jQuery("div#nwisResults").show();
+        jQuery("div#dataResults").show();
 
     }
 }
