@@ -5,8 +5,8 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.22
- * February 17, 2025
+ * version 1.25
+ * February 20, 2025
 */
 
 /*
@@ -51,8 +51,8 @@ var y_box_max   = svg_height - 300;
 var y_axis      = y_box_max - y_box_min;
 
 var x_min, x_max, x_interval, x_range;
-var x_box_min   = 100;
-var x_box_max   = svg_width - 200;
+var x_box_min   = 70;
+var x_box_max   = svg_width - 300;
 var x_axis      = x_box_max - x_box_min;
 
 var x_legend    = x_box_max + 100
@@ -443,7 +443,7 @@ function addWaterlevels(
         .enter()
         .append("path")
         .attr("class", 'zoomPts')
-        .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
+        .attr("id", function(d) { return `myCircles${d.lev_status_cd.replace(/[\s.]/g, '')}` })
         .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
         .attr("d", d => symbolScale(d.lev_status_cd))
         .attr("fill", d => colorScale(d.lev_status_cd))
@@ -491,7 +491,7 @@ function addWaterlevels(
         .enter()
         .append("path")
         .attr("class", 'overPts')
-        .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
+        .attr("id", function(d) { return `myCircles${d.lev_status_cd.replace(/[\s.]/g, '')}` })
         .attr("transform", d => `translate(${xScale(d.date)}, ${overviewScale(d.lev_va)})`)
         .attr("d", d => symbolScale(d.lev_status_cd))
         .attr("fill", d => colorScale(d.lev_status_cd))
@@ -668,7 +668,7 @@ function hydrographLegend(svgContainer,
         y_top += legend_box * 1.5
         
         let description = myLegend[i]
-        let id          = `myCircles${description}`
+        let id          = `myCircles${description.replace(/[\s.]/g, '')}`
 
         myLogger.info(  `Legend ${description}`);
 
