@@ -4,8 +4,8 @@
  * Main is a JavaScript library to provide a set of functions to manage
  *  the web requests.
  *
- * version 1.10
- * February 17, 2025
+ * version 1.11
+ * February 20, 2025
 */
 
 /*
@@ -227,6 +227,9 @@ function submitRequest() {
         else if(sourceIdentifier === 'cdwr') {
             cdwrRequest(siteIdentifier, columnIdentifier, sourceIdentifier)
         }
+        else if(sourceIdentifier === 'klamath_wells') {
+            projRequest(siteIdentifier, columnIdentifier, sourceIdentifier)
+        }
     }
     myLogger.info(`Submitted url ${url} -> siteIdentifier ${siteIdentifier} columnIdentifier ${columnIdentifier} sourceIdentifier ${sourceIdentifier}`);
 }
@@ -283,7 +286,7 @@ function checkRequest() {
         sourceIdentifier = url.searchParams.get("sourceIdentifier").toLowerCase();
         myLogger.info(`Parse sourceIdentifier ${sourceIdentifier}`);
 
-        const inputL = ["usgs", "owrd", "cdwr"];
+        const inputL = ["usgs", "owrd", "cdwr", "klamath_wells"];
 
         if(!inputL.includes(sourceIdentifier)) {
             message = `Choose one: Input source options: ${inputL.join(', ')} `;
@@ -294,12 +297,13 @@ function checkRequest() {
         }
     }
 
-    let searchCols = ["site_no", "coop_site_no", "site_code"];
+    let searchCols = ["site_no", "coop_site_no", "site_code", "site_id"];
     if(sourceIdentifier === 'usgs') { searchCols = ["site_no"]; }
     else if(sourceIdentifier === 'owrd') { searchCols = ["coop_site_no"]; }
     else if(sourceIdentifier === 'cdwr') { searchCols = ["site_code"]; }
+    else if(sourceIdentifier === 'klamath_wells') { searchCols = ["site_id"]; }
     else {
-        message = 'Choose site number for USGS source, cooperator site number for OWRD source, or site_code for CDWR source';
+        message = 'Choose site number for USGS source, cooperator site number for OWRD, site_code for CDWR, site_id for Klamath';
         openModal(message);
         fadeModal(10000);
 
@@ -313,7 +317,7 @@ function checkRequest() {
         myLogger.info(`Parse columnIdentifier ${columnIdentifier}`);
         
         if(!searchCols.includes(columnIdentifier)) {
-            message = 'Choose one: site number for USGS source, cooperator site number for OWRD source, or site_code for CDWR source';
+            message = 'Choose one: site number for USGS source, cooperator site number for OWRD, site_code for CDWR, site_id for Klamath';
             openModal(message);
             fadeModal(6000);
 
