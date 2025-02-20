@@ -3,8 +3,8 @@
 *
 * usgsService is a JavaScript library to parse the RDB output from NwisWeb output.
 *
-* version 1.18
-* February 17, 2025
+* version 1.19
+* February 20, 2025
 *
 */
 
