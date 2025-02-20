@@ -1,7 +1,7 @@
 <!doctype html>
 
-<!-- version 1.08 -->
-<!-- version_date February 17, 2025 -->
+<!-- version 1.09 -->
+<!-- version_date February 20, 2025 -->
 
 <html lang="en">
   <head>
@@ -55,6 +55,7 @@
                 <option id="site_no" value="site_no">USGS Site Number</option>
                 <option id="coop_site_no" value="coop_site_no">OWRD Cooperator Site Number</option>
                 <option id="site_code" value="site_code">CDWR Site Code</option>
+                <option id="site_id" value="site_id">Project Site ID</option>
               </select>
           </div>
 
@@ -65,6 +66,7 @@
                 <option id="usgs" value="usgs">USGS source</option>
                 <option id="owrd" value="owrd">OWRD source</option>
                 <option id="cdwr" value="cdwr">CDWR source</option>
+                <option id="klamath_wells" value="klamath_wells">Klamath Wells source</option>
                 <!-- <option id="all" value="all">All Above sources</option> -->
               </select>
           </div>
@@ -92,6 +94,10 @@
             
             <div class="tab-pane fade show active" id="hydrograph" role="tabpanel" aria-labelledby="hydrograph-tab">
               <div id="gwHydrograph" class="col-sm-12 mt-3 ps-1 py-1"></div>
+              <div id="gwHelp" class="col-sm-12 ps-1 py-1">
+                <div>Tip: To reset zoom period to period selected, double left-click in the "Period selected" plot.</div>
+                <div>Tip: To zoom to a shorter period, left-click and drag over the period of interest in Period selected plot.</div>
+             </div>
               <!-- Print button -->
               <div class="row mb-4 pt-1">
                 <div id="printButton" class="col-sm-12">
@@ -134,6 +140,7 @@
     <script src="javascripts/usgs/usgsService.js"></script>
     <script src="javascripts/usgs/owrdService.js"></script>
     <script src="javascripts/usgs/cdwrService.js"></script>
+    <script src="javascripts/usgs/projService.js"></script>
     <script src="javascripts/usgs/urlArguments.js"></script>
     <script src="javascripts/usgs/d3.AxisFunctions.js"></script>
     <script src="javascripts/usgs/d3_hydrograph.js"></script>
