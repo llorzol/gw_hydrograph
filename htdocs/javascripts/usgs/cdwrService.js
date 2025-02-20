@@ -1,10 +1,10 @@
 /**
 * Namespace: cdwrService
 *
-* cdwrService is a JavaScript library to parse the RDB output from OWRD output.
+* cdwrService is a JavaScript library to parse the JSON output from CDWR output.
 *
-* version 1.02
-* February 17, 2025
+* version 1.04
+* February 20, 2025
 *
 */
 
@@ -137,6 +137,8 @@ function parseSiteCDWR (myJson) {
         let myRecord = myJson.result.records[0];
         myRecord.station_nm = myRecord.swn
         myRecord.hole_depth_va = myRecord.well_depth;
+        myRecord.alt_va = myRecord.gse;
+        myRecord.alt_datum_cd = 'NAVD88';
         
         myData.push(myRecord)
         
