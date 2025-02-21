@@ -3,8 +3,8 @@
 *
 * projService is a JavaScript library to parse the JSON output from project output.
 *
-* version 1.02
-* February 20, 2025
+* version 1.03
+* February 21, 2025
 *
 */
 
@@ -44,7 +44,7 @@ function projRequest(siteIdentifier, columnIdentifier, sourceIdentifier) {
     // Request for site information
     //
     let request_type = "GET";
-    let script_http  = `http://127.0.0.1/cgi-bin/discrete_gw/requestGwRecords.py?column=${columnIdentifier}&site=${siteIdentifier}&project=${sourceIdentifier}`
+    let script_http  = `/cgi-bin/discrete_gw/requestGwRecords.py?column=${columnIdentifier}&site=${siteIdentifier}&project=${sourceIdentifier}`
     let data_http    = '';
     let dataType     = "json";
     myLogger.info(`Project Site service ${script_http}`);
