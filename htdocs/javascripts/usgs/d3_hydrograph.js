@@ -5,8 +5,8 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.25
- * February 20, 2025
+ * version 1.26
+ * February 22, 2025
 */
 
 /*
@@ -661,21 +661,50 @@ function hydrographLegend(svgContainer,
         .style("fill", 'black')
         .text(myTitle);
 
+    
+    y_top += legend_box * 1.5;
+
+
     // Loop through legend
     //
     for(let i = 0; i < myLegend.length; i++) {
-
-        y_top += legend_box * 1.5
         
         let description = myLegend[i]
         let id          = `myCircles${description.replace(/[\s.]/g, '')}`
 
         myLogger.info(  `Legend ${description}`);
 
+        let legendWidth = Math.abs(x_legend + legend_box * 1.25 - svg_width);
+        myLogger.info(`legendWidth ${legendWidth}`);
+        let textWrap = `${id}`
+        myLogger.info(textWrap);       
+
+        let myText = descriptions.append("text")
+            .style("text-anchor", "start")
+            .style("alignment-baseline", "center")
+            .style("font-family", "sans-serif")
+            .style("font-weight", "300")
+            .style("fill", 'black')
+            .attr('class', `${id}`)
+            .attr('x', x_legend + legend_box * 1.25)
+            .attr('y', y_top)
+            .attr("dy", "1em")
+            .text(description)
+            .call(wrap, legendWidth)
+            .on('mouseover', function(d, i) {
+                let id = d3.select(this).attr('class');
+                highlight(id);
+            })
+            .on('mouseout', function(d, i) {
+                unhighlight();
+            })
+        let myTextBox = getSvg(`.${id}`)
+        let myTextHeight = myTextBox.height
+
         let myCircle = descriptions.append("path")
             .attr('id', 'legendEntries')
             .attr('class', id)
-            .attr("transform", d => `translate(${x_legend}, ${y_top + legend_box * 0.5})`)
+            .attr("transform", d => `translate(${x_legend}, ${y_top + myTextHeight * 0.5})`)
             .attr('fill', colorScale(description))
             //.attr("d", d3.symbol().size(100).type(d => symbolScale(description)))
             .attr("d", symbolScale(description))
@@ -687,107 +716,7 @@ function hydrographLegend(svgContainer,
                 unhighlight();
             })
 
-        let myText = descriptions.append("text")
-            .style("text-anchor", "start")
-            .style("alignment-baseline", "center")
-            .style("font-family", "sans-serif")
-            .style("font-weight", "300")
-            .style("fill", 'black')
-            .text(description)
-            .attr('class', id)
-            .attr('x', x_legend + legend_box * 1.25)
-            .attr('y', y_top + legend_box * 0.75)
-            .on('mouseover', function(d, i) {
-                let id = d3.select(this).attr('class');
-                highlight(id);
-            })
-            .on('mouseout', function(d, i) {
-                unhighlight();
-            })
+        y_top += legend_box * 0.5 + myTextHeight
+        
     }
   }
-
-function addWaterlevelsSave(
-    svgContainer,
-    y_min,
-    y_max,
-    x_min,
-    x_max,
-    x_box_min,
-    x_box_max,
-    y_box_min,
-    y_box_max,
-    data,
-    tooltip) {
-
-    myLogger.info('addWaterlevels');
-    myLogger.info('myGwRecords');
-    myLogger.info(data);
-    myLogger.info(`X-axis information max ${x_max} min ${x_min}`);
-    
-    // Legend
-    //
-    //
-    let myStatusCodes = [...new Set(data.map(item => item.lev_status_cd))];
-    
-    hydrographLegend(svgContainer,
-                     myStatusCodes,
-                     'Explanation'
-                    )
-    
-    // Add symbols
-    //
-    let hydrograph = svgContainer.append("g")
-        .attr("transform", `translate(${x_box_min}, ${y_box_min})`)
-    
-    // Create the x scale
-    //
-    let width  = Math.abs(x_box_max - x_box_min);
-    let xScale = d3.scaleTime()
-	.domain([x_min, x_max]).nice()
-	.range([0, width])
-
-    // Create the y scale
-    //
-    let height = Math.abs(y_box_max - y_box_min);
-    let yScale = d3.scaleLinear().domain([y_min, y_max]).rangeRound([0, height]);
-
-    // Gaps for waterlevel is null [Dry, Obstructed]
-    //
-    let line = d3.line()
-        .defined((d) => d.lev_va !== null) // Skip null data points
-        .x((d) => xScale(d.date))
-        .y((d) => yScale(d.lev_va))
-
-    let dataPoints = data.filter(d => d.lev_va !== null)
-
-    // Draw the line
-    //
-    hydrograph.append("path")
-        .datum(data)
-        .attr("fill", "none")
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
-        .attr("d", line);
-
-    // Draw the points
-    //
-    hydrograph.selectAll(".points")
-        .data(dataPoints)
-        .enter()
-        .append("path")
-        .attr("class", 'points')
-        .attr("id", function(d) { return `myCircles${d.lev_status_cd}` })
-        .attr("d", d => symbolScale(d.lev_status_cd))
-        .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
-        .style("fill", d => colorScale(d.lev_status_cd))
-        .on("mousemove", function(event, d) {
-            tooltip
-                .style("left", event.pageX + "px")
-                .style("top", event.pageY + "px")
-                .style("display", "inline-block")
-                .html(d.tooltip);
-        })
-        .on("mouseout", function(d){ tooltip.style("display", "none");});
-
-}
