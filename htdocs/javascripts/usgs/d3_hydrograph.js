@@ -5,8 +5,8 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.26
- * February 22, 2025
+ * version 1.27
+ * February 23, 2025
 */
 
 /*
@@ -443,7 +443,7 @@ function addWaterlevels(
         .enter()
         .append("path")
         .attr("class", 'zoomPts')
-        .attr("id", function(d) { return `myCircles${d.lev_status_cd.replace(/[\s.]/g, '')}` })
+        .attr("id", function(d) { return `myCircles${d.lev_status_cd.replace(/[\s.()]/g, '')}` })
         .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d.lev_va)})`)
         .attr("d", d => symbolScale(d.lev_status_cd))
         .attr("fill", d => colorScale(d.lev_status_cd))
@@ -670,7 +670,7 @@ function hydrographLegend(svgContainer,
     for(let i = 0; i < myLegend.length; i++) {
         
         let description = myLegend[i]
-        let id          = `myCircles${description.replace(/[\s.]/g, '')}`
+        let id          = `myCircles${description.replace(/[\s.()]/g, '')}`
 
         myLogger.info(  `Legend ${description}`);
 
