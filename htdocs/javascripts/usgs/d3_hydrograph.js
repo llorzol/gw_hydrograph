@@ -5,8 +5,8 @@
  *  groundwater measurement hydrology in svg format from different sources: USGS,
  *  OWRD, CDWR.
  *
- * version 1.27
- * February 23, 2025
+ * version 1.28
+ * March 10, 2025
 */
 
 /*
@@ -234,10 +234,10 @@ function plotHydrograph(
     // Max and min waterlevel values
     //
     let maxValue = d3.max(myGwRecords, d => +d.lev_va); 
-    let minValue = d3.min(myGwRecords, d => +d.lev_va); 
+    let minValue = d3.min(myGwRecords, d => +d.lev_va);
+
     myLogger.info(`Y-axis information max ${maxValue} min ${minValue}`);
     [y_min, y_max, y_interval] = get_max_min(minValue, maxValue);
-    if(y_min < 0.0) { y_min = 0.0; }
     myLogger.info(`Y-axis information max ${y_max} min ${y_min} y_interval ${y_interval}`);
 
     // Left y axis
