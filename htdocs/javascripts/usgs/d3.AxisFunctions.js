@@ -4,8 +4,8 @@
  * d3_AxisFunctions is a JavaScript library to provide a set of functions to build
  *  axes and labelling for well construction and lithology applications in svg format.
  *
- * version 3.19
- * February 22, 2025
+ * version 3.20
+ * March 10, 2025
 */
 
 /*
@@ -224,11 +224,10 @@ function yAxis(
     // Y axis
     //
     var height   = Math.abs(y_box_max - y_box_min);
-    var thisAxis = d3.scaleLinear().domain([y_min, y_max]).rangeRound([0, height]);
+    var thisAxis = d3.scaleLinear().domain([y_min, y_max]).nice().rangeRound([0, height]);
 
     // Tic format
     //
-    let tickFormat  = ".0f";
     let labelOffset = 1;
     let x_label     = x_box_min;
 
@@ -238,12 +237,12 @@ function yAxis(
         labelOffset = -1;
         graph.attr("transform", `translate(${x_box_min}, ${y_box_min})`)
             .attr("class", "leftAxis axis axis--y")
-            .call(d3.axisLeft(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
+            .call(d3.axisLeft(thisAxis).tickSizeOuter(0).ticks(5))
     } else {
         x_label = x_box_max;
         graph.attr("transform", `translate(${x_box_max}, ${y_box_min})`)
             .attr("class", "rightAxis axis axis--y")
-            .call(d3.axisRight(thisAxis).tickSizeOuter(0).ticks(5).tickFormat(d3.format(tickFormat)))
+            .call(d3.axisRight(thisAxis).tickSizeOuter(0).ticks(5))
     }
 
     // Axis label
@@ -265,7 +264,7 @@ function yAxis(
             .append("g")
             .attr("id", "y-axis-label")
             .append("text")
-            .attr("transform", `translate(${x_label + ticWidth * 2 * labelOffset}, ${y_box_min + height * 0.5}) rotate(-90)`)
+            .attr("transform", `translate(${x_label + ticWidth * 1.5 * labelOffset}, ${y_box_min + height * 0.5}) rotate(-90)`)
             .attr('class', 'y_axis_label')
             .style("text-anchor", "middle")
             .style("font-family", "sans-serif")
