@@ -60,7 +60,7 @@ function usgsRequest(siteIdentifier, columnIdentifier, sourceIdentifier) {
             message = "Processed USGS Site information";
             openModal(message);
             fadeModal(2000);
-            [mySiteRecords, mySiteLegend] = parseSiteUSGS(myData);
+            mySiteRecords = parseSiteUSGS(myData);
         },
         error: function (error) {
             message = `Failed to load USGS Site information ${error}`;
@@ -91,7 +91,7 @@ function usgsRequest(siteIdentifier, columnIdentifier, sourceIdentifier) {
             message = "Processed USGS Groundwater Measurement information";
             openModal(message);
             fadeModal(2000);
-            [myGwRecords, myGwLegend] = parseGwUSGS(myData);
+            myGwRecords = parseGwUSGS(myData);
         },
         error: function (error) {
             message = `Failed to load USGS Groundwater Measurement information ${error}`;
@@ -108,9 +108,7 @@ function usgsRequest(siteIdentifier, columnIdentifier, sourceIdentifier) {
         fadeModal(2000);
         myLogger.info('NWIS output')
         myLogger.info(mySiteRecords)
-        myLogger.info(mySiteLegend)
         myLogger.info(myGwRecords)
-        myLogger.info(myGwLegend)
 
         buildTablesPanel(mySiteRecords, myGwRecords);
 
@@ -197,7 +195,7 @@ function parseSiteUSGS (dataRDB) {
     Fields = myData.columns;
     myLogger.info(Fields);
     
-    return [ myData, myDataDict ];
+    return myData;
 }
 
 function parseGwUSGS(dataRDB) {
@@ -447,5 +445,5 @@ function parseGwUSGS(dataRDB) {
     myLogger.info(myData);
     myLogger.info(Obstructed);
     
-    return [ myData, myDataDict ];
+    return myData;
   }
